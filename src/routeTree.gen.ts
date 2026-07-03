@@ -14,12 +14,22 @@ import { Route as GiftBoxRouteImport } from './routes/gift-box'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as AiFinderRouteImport } from './routes/ai-finder'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as OOccasionRouteImport } from './routes/o.$occasion'
 import { Route as CCategoryRouteImport } from './routes/c.$category'
+import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
+import { Route as AccountSettingsRouteImport } from './routes/account.settings'
+import { Route as AccountReviewsRouteImport } from './routes/account.reviews'
+import { Route as AccountRemindersRouteImport } from './routes/account.reminders'
+import { Route as AccountProfileRouteImport } from './routes/account.profile'
+import { Route as AccountOrdersRouteImport } from './routes/account.orders'
+import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 import { Route as PSlugCustomizeRouteImport } from './routes/p.$slug.customize'
 import { Route as CCategorySubcategoryRouteImport } from './routes/c.$category.$subcategory'
+import { Route as AccountOrdersIdRouteImport } from './routes/account.orders.$id'
 
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
@@ -46,10 +56,20 @@ const AiFinderRoute = AiFinderRouteImport.update({
   path: '/ai-finder',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRoute,
 } as any)
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
@@ -66,6 +86,41 @@ const CCategoryRoute = CCategoryRouteImport.update({
   path: '/c/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountWishlistRoute = AccountWishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountSettingsRoute = AccountSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountReviewsRoute = AccountReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountRemindersRoute = AccountRemindersRouteImport.update({
+  id: '/reminders',
+  path: '/reminders',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountProfileRoute = AccountProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountOrdersRoute = AccountOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountAddressesRoute = AccountAddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
+  getParentRoute: () => AccountRoute,
+} as any)
 const PSlugCustomizeRoute = PSlugCustomizeRouteImport.update({
   id: '/customize',
   path: '/customize',
@@ -76,17 +131,32 @@ const CCategorySubcategoryRoute = CCategorySubcategoryRouteImport.update({
   path: '/$subcategory',
   getParentRoute: () => CCategoryRoute,
 } as any)
+const AccountOrdersIdRoute = AccountOrdersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AccountOrdersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRouteWithChildren
   '/ai-finder': typeof AiFinderRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/gift-box': typeof GiftBoxRoute
   '/search': typeof SearchRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/orders': typeof AccountOrdersRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/reminders': typeof AccountRemindersRoute
+  '/account/reviews': typeof AccountReviewsRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/account/': typeof AccountIndexRoute
+  '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
@@ -97,23 +167,42 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/gift-box': typeof GiftBoxRoute
   '/search': typeof SearchRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/orders': typeof AccountOrdersRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/reminders': typeof AccountRemindersRoute
+  '/account/reviews': typeof AccountReviewsRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/account': typeof AccountIndexRoute
+  '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRouteWithChildren
   '/ai-finder': typeof AiFinderRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/gift-box': typeof GiftBoxRoute
   '/search': typeof SearchRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/orders': typeof AccountOrdersRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/reminders': typeof AccountRemindersRoute
+  '/account/reviews': typeof AccountReviewsRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/account/': typeof AccountIndexRoute
+  '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
@@ -121,14 +210,24 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/ai-finder'
     | '/cart'
     | '/checkout'
     | '/gift-box'
     | '/search'
+    | '/account/addresses'
+    | '/account/orders'
+    | '/account/profile'
+    | '/account/reminders'
+    | '/account/reviews'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/account/'
+    | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   fileRoutesByTo: FileRoutesByTo
@@ -139,28 +238,48 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/gift-box'
     | '/search'
+    | '/account/addresses'
+    | '/account/orders'
+    | '/account/profile'
+    | '/account/reminders'
+    | '/account/reviews'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/account'
+    | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/ai-finder'
     | '/cart'
     | '/checkout'
     | '/gift-box'
     | '/search'
+    | '/account/addresses'
+    | '/account/orders'
+    | '/account/profile'
+    | '/account/reminders'
+    | '/account/reviews'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/account/'
+    | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRouteWithChildren
   AiFinderRoute: typeof AiFinderRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
@@ -208,12 +327,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiFinderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
     }
     '/p/$slug': {
       id: '/p/$slug'
@@ -236,6 +369,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/wishlist': {
+      id: '/account/wishlist'
+      path: '/wishlist'
+      fullPath: '/account/wishlist'
+      preLoaderRoute: typeof AccountWishlistRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/settings': {
+      id: '/account/settings'
+      path: '/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof AccountSettingsRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/reviews': {
+      id: '/account/reviews'
+      path: '/reviews'
+      fullPath: '/account/reviews'
+      preLoaderRoute: typeof AccountReviewsRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/reminders': {
+      id: '/account/reminders'
+      path: '/reminders'
+      fullPath: '/account/reminders'
+      preLoaderRoute: typeof AccountRemindersRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/profile': {
+      id: '/account/profile'
+      path: '/profile'
+      fullPath: '/account/profile'
+      preLoaderRoute: typeof AccountProfileRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/orders': {
+      id: '/account/orders'
+      path: '/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AccountOrdersRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/addresses': {
+      id: '/account/addresses'
+      path: '/addresses'
+      fullPath: '/account/addresses'
+      preLoaderRoute: typeof AccountAddressesRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/p/$slug/customize': {
       id: '/p/$slug/customize'
       path: '/customize'
@@ -250,8 +432,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CCategorySubcategoryRouteImport
       parentRoute: typeof CCategoryRoute
     }
+    '/account/orders/$id': {
+      id: '/account/orders/$id'
+      path: '/$id'
+      fullPath: '/account/orders/$id'
+      preLoaderRoute: typeof AccountOrdersIdRouteImport
+      parentRoute: typeof AccountOrdersRoute
+    }
   }
 }
+
+interface AccountOrdersRouteChildren {
+  AccountOrdersIdRoute: typeof AccountOrdersIdRoute
+}
+
+const AccountOrdersRouteChildren: AccountOrdersRouteChildren = {
+  AccountOrdersIdRoute: AccountOrdersIdRoute,
+}
+
+const AccountOrdersRouteWithChildren = AccountOrdersRoute._addFileChildren(
+  AccountOrdersRouteChildren,
+)
+
+interface AccountRouteChildren {
+  AccountAddressesRoute: typeof AccountAddressesRoute
+  AccountOrdersRoute: typeof AccountOrdersRouteWithChildren
+  AccountProfileRoute: typeof AccountProfileRoute
+  AccountRemindersRoute: typeof AccountRemindersRoute
+  AccountReviewsRoute: typeof AccountReviewsRoute
+  AccountSettingsRoute: typeof AccountSettingsRoute
+  AccountWishlistRoute: typeof AccountWishlistRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+}
+
+const AccountRouteChildren: AccountRouteChildren = {
+  AccountAddressesRoute: AccountAddressesRoute,
+  AccountOrdersRoute: AccountOrdersRouteWithChildren,
+  AccountProfileRoute: AccountProfileRoute,
+  AccountRemindersRoute: AccountRemindersRoute,
+  AccountReviewsRoute: AccountReviewsRoute,
+  AccountSettingsRoute: AccountSettingsRoute,
+  AccountWishlistRoute: AccountWishlistRoute,
+  AccountIndexRoute: AccountIndexRoute,
+}
+
+const AccountRouteWithChildren =
+  AccountRoute._addFileChildren(AccountRouteChildren)
 
 interface CCategoryRouteChildren {
   CCategorySubcategoryRoute: typeof CCategorySubcategoryRoute
@@ -277,6 +503,7 @@ const PSlugRouteWithChildren = PSlugRoute._addFileChildren(PSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRouteWithChildren,
   AiFinderRoute: AiFinderRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
