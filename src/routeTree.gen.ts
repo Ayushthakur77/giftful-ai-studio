@@ -9,38 +9,205 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as GiftBoxRouteImport } from './routes/gift-box'
+import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as CartRouteImport } from './routes/cart'
+import { Route as AiFinderRouteImport } from './routes/ai-finder'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as OOccasionRouteImport } from './routes/o.$occasion'
+import { Route as CCategoryRouteImport } from './routes/c.$category'
+import { Route as PSlugCustomizeRouteImport } from './routes/p.$slug.customize'
+import { Route as CCategorySubcategoryRouteImport } from './routes/c.$category.$subcategory'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiftBoxRoute = GiftBoxRouteImport.update({
+  id: '/gift-box',
+  path: '/gift-box',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiFinderRoute = AiFinderRouteImport.update({
+  id: '/ai-finder',
+  path: '/ai-finder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OOccasionRoute = OOccasionRouteImport.update({
+  id: '/o/$occasion',
+  path: '/o/$occasion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CCategoryRoute = CCategoryRouteImport.update({
+  id: '/c/$category',
+  path: '/c/$category',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PSlugCustomizeRoute = PSlugCustomizeRouteImport.update({
+  id: '/customize',
+  path: '/customize',
+  getParentRoute: () => PSlugRoute,
+} as any)
+const CCategorySubcategoryRoute = CCategorySubcategoryRouteImport.update({
+  id: '/$subcategory',
+  path: '/$subcategory',
+  getParentRoute: () => CCategoryRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-finder': typeof AiFinderRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/gift-box': typeof GiftBoxRoute
+  '/search': typeof SearchRoute
+  '/c/$category': typeof CCategoryRouteWithChildren
+  '/o/$occasion': typeof OOccasionRoute
+  '/p/$slug': typeof PSlugRouteWithChildren
+  '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
+  '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-finder': typeof AiFinderRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/gift-box': typeof GiftBoxRoute
+  '/search': typeof SearchRoute
+  '/c/$category': typeof CCategoryRouteWithChildren
+  '/o/$occasion': typeof OOccasionRoute
+  '/p/$slug': typeof PSlugRouteWithChildren
+  '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
+  '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-finder': typeof AiFinderRoute
+  '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
+  '/gift-box': typeof GiftBoxRoute
+  '/search': typeof SearchRoute
+  '/c/$category': typeof CCategoryRouteWithChildren
+  '/o/$occasion': typeof OOccasionRoute
+  '/p/$slug': typeof PSlugRouteWithChildren
+  '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
+  '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/ai-finder'
+    | '/cart'
+    | '/checkout'
+    | '/gift-box'
+    | '/search'
+    | '/c/$category'
+    | '/o/$occasion'
+    | '/p/$slug'
+    | '/c/$category/$subcategory'
+    | '/p/$slug/customize'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/ai-finder'
+    | '/cart'
+    | '/checkout'
+    | '/gift-box'
+    | '/search'
+    | '/c/$category'
+    | '/o/$occasion'
+    | '/p/$slug'
+    | '/c/$category/$subcategory'
+    | '/p/$slug/customize'
+  id:
+    | '__root__'
+    | '/'
+    | '/ai-finder'
+    | '/cart'
+    | '/checkout'
+    | '/gift-box'
+    | '/search'
+    | '/c/$category'
+    | '/o/$occasion'
+    | '/p/$slug'
+    | '/c/$category/$subcategory'
+    | '/p/$slug/customize'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiFinderRoute: typeof AiFinderRoute
+  CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
+  GiftBoxRoute: typeof GiftBoxRoute
+  SearchRoute: typeof SearchRoute
+  CCategoryRoute: typeof CCategoryRouteWithChildren
+  OOccasionRoute: typeof OOccasionRoute
+  PSlugRoute: typeof PSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gift-box': {
+      id: '/gift-box'
+      path: '/gift-box'
+      fullPath: '/gift-box'
+      preLoaderRoute: typeof GiftBoxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-finder': {
+      id: '/ai-finder'
+      path: '/ai-finder'
+      fullPath: '/ai-finder'
+      preLoaderRoute: typeof AiFinderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +215,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/o/$occasion': {
+      id: '/o/$occasion'
+      path: '/o/$occasion'
+      fullPath: '/o/$occasion'
+      preLoaderRoute: typeof OOccasionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$category': {
+      id: '/c/$category'
+      path: '/c/$category'
+      fullPath: '/c/$category'
+      preLoaderRoute: typeof CCategoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug/customize': {
+      id: '/p/$slug/customize'
+      path: '/customize'
+      fullPath: '/p/$slug/customize'
+      preLoaderRoute: typeof PSlugCustomizeRouteImport
+      parentRoute: typeof PSlugRoute
+    }
+    '/c/$category/$subcategory': {
+      id: '/c/$category/$subcategory'
+      path: '/$subcategory'
+      fullPath: '/c/$category/$subcategory'
+      preLoaderRoute: typeof CCategorySubcategoryRouteImport
+      parentRoute: typeof CCategoryRoute
+    }
   }
 }
 
+interface CCategoryRouteChildren {
+  CCategorySubcategoryRoute: typeof CCategorySubcategoryRoute
+}
+
+const CCategoryRouteChildren: CCategoryRouteChildren = {
+  CCategorySubcategoryRoute: CCategorySubcategoryRoute,
+}
+
+const CCategoryRouteWithChildren = CCategoryRoute._addFileChildren(
+  CCategoryRouteChildren,
+)
+
+interface PSlugRouteChildren {
+  PSlugCustomizeRoute: typeof PSlugCustomizeRoute
+}
+
+const PSlugRouteChildren: PSlugRouteChildren = {
+  PSlugCustomizeRoute: PSlugCustomizeRoute,
+}
+
+const PSlugRouteWithChildren = PSlugRoute._addFileChildren(PSlugRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiFinderRoute: AiFinderRoute,
+  CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
+  GiftBoxRoute: GiftBoxRoute,
+  SearchRoute: SearchRoute,
+  CCategoryRoute: CCategoryRouteWithChildren,
+  OOccasionRoute: OOccasionRoute,
+  PSlugRoute: PSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
