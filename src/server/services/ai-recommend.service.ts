@@ -17,6 +17,7 @@ import {
   findProductBySlug,
   findEmptyBoxBySlug,
   findReadyBoxBySlug,
+  products as allProducts,
   ribbons,
   fillers,
   greetingCards,
