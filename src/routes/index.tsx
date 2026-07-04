@@ -83,11 +83,19 @@ function HomePage() {
 
       <AiHomeRails />
 
-      {personalized.length > 0 && (
-        <ProductRail title="Made just for them" subtitle="Personalized gifts they'll cherish forever" ctaLabel="Shop all" ctaTo="/c/personalized">
-          {personalized.map((p) => <ProductCard key={p.slug} product={p} />)}
+      {all.isLoading ? (
+        <ProductRail title="Featured gifts" subtitle="Loading…">
+          {Array.from({ length: 5 }).map((_, i) => <ProductCardSkeleton key={i} />)}
         </ProductRail>
-      )}
+      ) : featured.length > 0 ? (
+        <ProductRail title="Featured gifts" subtitle="Handpicked by our team" ctaLabel="Shop all" ctaTo="/search">
+          {featured.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      ) : products.length > 0 ? (
+        <ProductRail title="All gifts" ctaLabel="Shop all" ctaTo="/search">
+          {products.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      ) : null}
 
 
       <section className="container-page py-8 md:py-10">
@@ -129,21 +137,12 @@ function HomePage() {
         </ProductRail>
       )}
 
-      <ProductRail title="Ready-made gift boxes" ctaLabel="Shop hampers" ctaTo="/gift-boxes">
-        {readyBoxLike.map((p) => <ProductCard key={p.slug} product={p} />)}
-      </ProductRail>
-
-      {festival.length > 0 && (
-        <ProductRail title="Festival collection" subtitle="Handpicked for the season" ctaLabel="Explore" ctaTo="/o/diwali">
-          {festival.map((p) => <ProductCard key={p.slug} product={p} />)}
-        </ProductRail>
-      )}
-
       {bestSellers.length > 0 && (
         <ProductRail title="Best sellers" ctaLabel="See all" ctaTo="/search">
           {bestSellers.map((p) => <ProductCard key={p.slug} product={p} />)}
         </ProductRail>
       )}
+
 
       <section className="container-page py-8 md:py-12">
         <SectionHeader title="What our customers say" />
