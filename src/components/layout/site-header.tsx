@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { signOutFn } from "@/lib/auth.functions";
-import { categories } from "@/lib/mock-data";
+import { useCart, useWishlist } from "@/lib/store";
+
 
 const primaryNav = [
   { to: "/c/personalized", label: "Personalized", icon: Sparkles },
