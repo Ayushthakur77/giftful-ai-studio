@@ -45,9 +45,7 @@ export const adminGetSettingsFn = createServerFn({ method: "GET" })
   .middleware([requireSuperAdmin])
   .handler(async ({ context }) => {
     const { data } = await context.supabase.from("store_settings").select("*");
-    const map: Record<string, unknown> = {};
-    for (const row of data ?? []) map[row.key] = row.value;
-    return map;
+    return (data ?? []) as Array<{ key: string; value: unknown; is_public: boolean; updated_at: string }>;
   });
 
 export const adminUpdateSettingFn = createServerFn({ method: "POST" })
