@@ -181,7 +181,7 @@ export function ShopBrowser({
                 : "grid grid-cols-1 gap-3"
             }
           >
-            {pageResults.map((p) => (
+            {pageResults.map((p: Product) => (
               <ProductCard key={p.slug} product={p} />
             ))}
           </div>
