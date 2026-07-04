@@ -39,7 +39,7 @@ export const adminUpsertEmptyBoxFn = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = { ...data };
     payload.slug = data.slug || slugify(data.name);
     if (data.id) {
-      const { error } = await context.supabase.from("empty_gift_boxes").update(payload).eq("id", data.id);
+      const { error } = await context.supabase.from("empty_gift_boxes").update(payload as never).eq("id", data.id);
       if (error) return { ok: false as const, error: error.message };
       await logAudit({ actorId: context.userId, action: "empty_box.update", entity: "empty_gift_boxes", entityId: data.id });
       return { ok: true as const, id: data.id };
@@ -98,7 +98,7 @@ export const adminUpsertReadyBoxFn = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = { ...data };
     payload.slug = data.slug || slugify(data.name);
     if (data.id) {
-      const { error } = await context.supabase.from("ready_gift_boxes").update(payload).eq("id", data.id);
+      const { error } = await context.supabase.from("ready_gift_boxes").update(payload as never).eq("id", data.id);
       if (error) return { ok: false as const, error: error.message };
       await logAudit({ actorId: context.userId, action: "ready_box.update", entity: "ready_gift_boxes", entityId: data.id });
       return { ok: true as const, id: data.id };
@@ -147,7 +147,7 @@ export const adminUpsertFestivalFn = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = { ...data };
     payload.slug = data.slug || slugify(data.name);
     if (data.id) {
-      const { error } = await context.supabase.from("festivals").update(payload).eq("id", data.id);
+      const { error } = await context.supabase.from("festivals").update(payload as never).eq("id", data.id);
       if (error) return { ok: false as const, error: error.message };
       await logAudit({ actorId: context.userId, action: "festival.update", entity: "festivals", entityId: data.id });
       return { ok: true as const, id: data.id };

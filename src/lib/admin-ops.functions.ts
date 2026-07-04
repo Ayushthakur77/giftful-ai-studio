@@ -89,7 +89,7 @@ export const adminModerateReviewFn = createServerFn({ method: "POST" })
     const patch: Record<string, unknown> = {};
     if (data.status) patch.status = data.status;
     if (data.is_featured !== undefined) patch.is_featured = data.is_featured;
-    const { error } = await context.supabase.from("reviews").update(patch).eq("id", data.id);
+    const { error } = await context.supabase.from("reviews").update(patch as never).eq("id", data.id);
     if (error) return { ok: false as const, error: error.message };
     await logAudit({ actorId: context.userId, action: "review.moderate", entity: "reviews", entityId: data.id, diff: patch });
     return { ok: true as const };

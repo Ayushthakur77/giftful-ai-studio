@@ -41,7 +41,7 @@ export const adminUpsertCategoryFn = createServerFn({ method: "POST" })
     if (payload.icon_url === "") payload.icon_url = null;
     if (payload.banner_url === "") payload.banner_url = null;
     if (data.id) {
-      const { error } = await context.supabase.from("categories").update(payload).eq("id", data.id);
+      const { error } = await context.supabase.from("categories").update(payload as never).eq("id", data.id);
       if (error) return { ok: false as const, error: error.message };
       await logAudit({ actorId: context.userId, action: "category.update", entity: "categories", entityId: data.id, diff: payload });
       return { ok: true as const, id: data.id };
@@ -120,7 +120,7 @@ export const adminUpsertProductFn = createServerFn({ method: "POST" })
     const payload: Record<string, unknown> = { ...data };
     payload.slug = data.slug || slugify(data.name);
     if (data.id) {
-      const { error } = await context.supabase.from("products").update(payload).eq("id", data.id);
+      const { error } = await context.supabase.from("products").update(payload as never).eq("id", data.id);
       if (error) return { ok: false as const, error: error.message };
       await logAudit({ actorId: context.userId, action: "product.update", entity: "products", entityId: data.id, diff: payload });
       return { ok: true as const, id: data.id };
