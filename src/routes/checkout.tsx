@@ -407,3 +407,60 @@ function Field({
     </div>
   );
 }
+
+type ResolvedLocation = {
+  line1?: string; line2?: string; city?: string; state?: string; pincode?: string; country?: string;
+};
+
+function UseMyLocationButton({ onResolved }: { onResolved: (loc: ResolvedLocation) => void }) {
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = () => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocation not supported on this device");
+      return;
+    }
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            { headers: { Accept: "application/json" } },
+          );
+          if (!res.ok) throw new Error("Reverse geocoding failed");
+          const j = await res.json();
+          const a = j.address ?? {};
+          const line1 = [a.house_number, a.road || a.pedestrian || a.neighbourhood].filter(Boolean).join(" ");
+          const line2 = [a.suburb, a.village, a.town].filter(Boolean).join(", ");
+          onResolved({
+            line1: line1 || undefined,
+            line2: line2 || undefined,
+            city: a.city || a.town || a.village || a.county,
+            state: a.state,
+            pincode: a.postcode,
+            country: (a.country_code || "in").toUpperCase(),
+          });
+          toast.success("Location filled in");
+        } catch (e) {
+          toast.error("Could not detect address from location");
+        } finally {
+          setLoading(false);
+        }
+      },
+      (err) => {
+        setLoading(false);
+        toast.error(err.code === err.PERMISSION_DENIED ? "Location permission denied" : "Could not get your location");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={handleClick} disabled={loading} className="justify-start">
+      {loading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <LocateFixed className="mr-2 size-4" />}
+      {loading ? "Detecting your location…" : "Use my current location"}
+    </Button>
+  );
+}
