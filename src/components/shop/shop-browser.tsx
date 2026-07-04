@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Grid2x2, LayoutList, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,18 +10,21 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
-  listProducts,
   categories as allCategories,
   occasions as allOccasions,
   recipients as allRecipients,
+  discountPct,
+  type Product,
   type CategorySlug,
   type OccasionSlug,
   type RecipientSlug,
   type SortKey,
 } from "@/lib/catalog";
-import { ProductCard } from "@/components/product/product-card";
+import { listPublicProductsFn } from "@/lib/public-catalog.functions";
+import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PackageSearch } from "lucide-react";
+
 
 export type BrowserSearch = {
   q?: string;
@@ -71,13 +75,21 @@ export function ShopBrowser({
   const view = search.view ?? "grid";
   const page = search.page ?? 1;
 
-  const results = useMemo(() => listProducts(filters, sort), [JSON.stringify(filters), sort]);
+  const productsQuery = useQuery({
+    queryKey: ["public-products", "browser", lockCategory ?? null],
+    queryFn: () => listPublicProductsFn({ data: { categorySlug: lockCategory, limit: 60 } }),
+    staleTime: 30_000,
+  });
+  const all = productsQuery.data ?? [];
+
+  const results = useMemo(() => applyFilters(all, filters, sort), [all, JSON.stringify(filters), sort]);
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function update(patch: Partial<BrowserSearch>) {
     navigate({ search: (prev: BrowserSearch) => ({ ...prev, ...patch, page: 1 }) });
   }
+
 
   const filterPanel = (
     <FilterPanel
@@ -169,7 +181,7 @@ export function ShopBrowser({
                 : "grid grid-cols-1 gap-3"
             }
           >
-            {pageResults.map((p) => (
+            {pageResults.map((p: Product) => (
               <ProductCard key={p.slug} product={p} />
             ))}
           </div>
@@ -359,4 +371,48 @@ function CheckLine({
       <Label htmlFor={id} className="text-sm font-normal">{label}</Label>
     </div>
   );
+}
+
+type Filters = {
+  q?: string;
+  category?: CategorySlug;
+  occasion?: OccasionSlug;
+  recipient?: RecipientSlug;
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  discountOnly?: boolean;
+  personalizableOnly?: boolean;
+  giftBoxCompatibleOnly?: boolean;
+  inStockOnly?: boolean;
+};
+
+function applyFilters(items: Product[], f: Filters, sort: SortKey): Product[] {
+  const q = f.q?.trim().toLowerCase();
+  let out = items.filter((p) => {
+    if (f.category && p.category !== f.category) return false;
+    if (f.occasion && !p.occasions.includes(f.occasion)) return false;
+    if (f.recipient && !p.recipients.includes(f.recipient)) return false;
+    if (f.minPrice != null && p.pricePaise < f.minPrice) return false;
+    if (f.maxPrice != null && p.pricePaise > f.maxPrice) return false;
+    if (f.minRating != null && p.rating < f.minRating) return false;
+    if (f.inStockOnly && p.stock <= 0) return false;
+    if (f.personalizableOnly && !p.isPersonalizable) return false;
+    if (f.giftBoxCompatibleOnly && !p.isGiftBoxCompatible) return false;
+    if (f.discountOnly && !(p.mrpPaise && p.mrpPaise > p.pricePaise)) return false;
+    if (q) {
+      const hay = `${p.name} ${p.shortDescription} ${p.description} ${p.category} ${(p.tags ?? []).join(" ")}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  switch (sort) {
+    case "price-asc": out.sort((a, b) => a.pricePaise - b.pricePaise); break;
+    case "price-desc": out.sort((a, b) => b.pricePaise - a.pricePaise); break;
+    case "rating": out.sort((a, b) => b.rating - a.rating); break;
+    case "discount": out.sort((a, b) => discountPct(b) - discountPct(a)); break;
+    case "newest": out = [...out].reverse(); break;
+    default: out.sort((a, b) => b.ratingCount - a.ratingCount);
+  }
+  return out;
 }
