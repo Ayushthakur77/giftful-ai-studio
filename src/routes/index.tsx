@@ -6,6 +6,7 @@ import { OccasionTile } from "@/components/marketing/occasion-tile";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
+import { AiHomeRails } from "@/components/ai/ai-home-rail";
 import {
   occasions,
   recipients,
@@ -71,11 +72,14 @@ function HomePage() {
         </div>
       </section>
 
+      <AiHomeRails />
+
       {personalized.length > 0 && (
         <ProductRail title="Made just for them" subtitle="Personalized gifts they'll cherish forever" ctaLabel="Shop all" ctaTo="/c/personalized">
           {personalized.map((p) => <ProductCard key={p.slug} product={p} />)}
         </ProductRail>
       )}
+
 
       <section className="container-page py-8 md:py-10">
         <div className="grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2">
