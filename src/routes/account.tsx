@@ -3,7 +3,14 @@ import { Package, Heart, MapPin, User, Bell, Star, Settings } from "lucide-react
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { redirect } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/account")({
+  beforeLoad: ({ context, location }) => {
+    if (!context.user) {
+      throw redirect({ to: "/auth/sign-in", search: { redirect: location.href } });
+    }
+  },
   head: () => ({ meta: [{ title: "My Account — Giftty" }, { name: "robots", content: "noindex" }] }),
   component: AccountLayout,
 });

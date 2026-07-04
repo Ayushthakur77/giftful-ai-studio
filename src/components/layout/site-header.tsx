@@ -1,8 +1,10 @@
-import { Link } from "@tanstack/react-router";
-import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown } from "lucide-react";
+import { Link, useRouteContext, useRouter } from "@tanstack/react-router";
+import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown, LogOut, Shield } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { signOutFn } from "@/lib/auth.functions";
 import { categories } from "@/lib/mock-data";
 
 const primaryNav = [
@@ -17,10 +19,18 @@ const primaryNav = [
 ] as const;
 
 export function SiteHeader() {
+  const { user } = useRouteContext({ from: "__root__" });
+  const router = useRouter();
+  async function handleSignOut() {
+    await signOutFn({});
+    await router.invalidate();
+    router.navigate({ to: "/" });
+  }
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Top row */}
       <div className="container-page flex h-14 items-center gap-3 md:h-16">
+
         {/* Mobile menu */}
         <Sheet>
           <SheetTrigger asChild>
@@ -43,9 +53,6 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="my-2 border-t border-border" />
-              <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Account
-              </Link>
               <Link to="/account/orders" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
                 Orders
               </Link>
@@ -55,12 +62,37 @@ export function SiteHeader() {
               <Link to="/help" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
                 Help
               </Link>
-              <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Sign in
-              </Link>
+              <div className="my-2 border-t border-border" />
+              {user ? (
+                <>
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Signed in as<br /><span className="text-foreground">{user.email}</span></div>
+                  <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
+                    My account
+                  </Link>
+                  {user.isSuperAdmin && (
+                    <Link to="/admin/dashboard" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
+                      Admin panel
+                    </Link>
+                  )}
+                  <button onClick={handleSignOut} className="rounded-md px-3 py-3 text-left text-sm font-medium hover:bg-muted">
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
+                    Sign in
+                  </Link>
+                  <Link to="/auth/sign-up" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
+                    Create account
+                  </Link>
+                </>
+              )}
             </nav>
           </SheetContent>
         </Sheet>
+
+
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5" aria-label="Giftty home">
@@ -113,11 +145,40 @@ export function SiteHeader() {
               <Package className="size-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Account" className="hidden md:inline-flex">
-            <Link to="/account">
-              <User className="size-5" />
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Account menu" className="hidden md:inline-flex">
+                  <User className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate">{user.name ?? user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/account">My account</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/orders">Orders</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/wishlist">Wishlist</Link></DropdownMenuItem>
+                {user.isSuperAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="text-primary">
+                        <Shield className="mr-2 size-4" />Admin panel
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleSignOut}>
+                  <LogOut className="mr-2 size-4" />Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" asChild className="hidden h-9 px-3 text-sm font-medium md:inline-flex">
+              <Link to="/auth/sign-in">Sign in</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" asChild aria-label="Cart">
             <Link to="/cart" className="relative">
               <ShoppingBag className="size-5" />
