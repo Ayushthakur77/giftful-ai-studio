@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ShopBrowser } from "@/components/shop/shop-browser";
+import { AiSearchPanel } from "@/components/ai/ai-search-panel";
 import { browserSearchValidator } from "@/lib/search-schema";
 
 export const Route = createFileRoute("/search")({
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/search")({
     return {
       meta: [
         { title: q ? `Results for "${q}" — Giftty` : "Search gifts — Giftty" },
-        { name: "description", content: "Search flowers, cakes, personalized gifts and hampers across India." },
+        { name: "description", content: "Search flowers, cakes, personalized gifts and hampers across India, powered by AI." },
       ],
     };
   },
@@ -25,6 +26,7 @@ function SearchPage() {
           {search.q ? `Results for "${search.q}"` : "All gifts"}
         </h1>
       </div>
+      <AiSearchPanel initialQuery={search.q} />
       <ShopBrowser search={search} routeFrom="/search" />
     </>
   );

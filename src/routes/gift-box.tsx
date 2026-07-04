@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { z } from "zod";
 import { Check, ChevronLeft, ChevronRight, Plus, Minus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,8 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { PriceBlock } from "@/components/product/price-block";
+import { AiGiftBuilderPanel, type AiBuildDraft } from "@/components/ai/ai-gift-builder-panel";
+import { AiGreetingButton } from "@/components/ai/ai-greeting-button";
 import { cn } from "@/lib/utils";
 import {
   emptyGiftBoxes,
@@ -24,10 +27,14 @@ import { computeCart } from "@/lib/pricing";
 import { useCart } from "@/lib/store";
 
 export const Route = createFileRoute("/gift-box")({
+  validateSearch: z.object({
+    ai: z.string().max(500).optional(),
+    budget: z.string().max(20).optional(),
+  }),
   head: () => ({
     meta: [
       { title: "Build Your Own Gift Box — Giftty" },
-      { name: "description", content: "Design a custom gift box in 6 easy steps and we'll pack it with love." },
+      { name: "description", content: "Design a custom gift box in 6 easy steps, or let AI build one for you — with full editing control." },
       { property: "og:title", content: "Build Your Own Gift Box — Giftty" },
     ],
   }),
@@ -40,6 +47,7 @@ type Item = { productSlug: string; quantity: number };
 
 function GiftBoxWizard() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const addCustomBox = useCart((s) => s.addCustomBox);
 
   const [step, setStep] = useState(0);
@@ -49,6 +57,16 @@ function GiftBoxWizard() {
   const [fillerSlug, setFillerSlug] = useState(fillers[0].slug);
   const [cardSlug, setCardSlug] = useState(greetingCards[0].slug);
   const [note, setNote] = useState("");
+
+  function applyAiDraft(draft: AiBuildDraft) {
+    setBoxSlug(draft.emptyBoxSlug);
+    setItems(draft.items.map((i) => ({ productSlug: i.productSlug, quantity: i.quantity })));
+    if (draft.ribbonSlug) setRibbonSlug(draft.ribbonSlug);
+    if (draft.fillerSlug) setFillerSlug(draft.fillerSlug);
+    if (draft.cardSlug) setCardSlug(draft.cardSlug);
+    if (draft.giftNote) setNote(draft.giftNote);
+    setStep(1);
+  }
 
   const box = boxSlug ? findEmptyBoxBySlug(boxSlug) : undefined;
   const compatibleProducts = useMemo<Product[]>(() => allProducts.filter((p) => p.isGiftBoxCompatible), []);
@@ -105,6 +123,13 @@ function GiftBoxWizard() {
     <div className="container-page py-6 md:py-10">
       <h1 className="font-display text-2xl font-bold md:text-3xl">Build your gift box</h1>
       <p className="mt-1 text-sm text-muted-foreground">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
+
+      <AiGiftBuilderPanel
+        defaultQuery={search.ai}
+        defaultBudget={search.budget}
+        onApply={applyAiDraft}
+      />
+
 
       <div className="mt-4">
         <Progress value={((step + 1) / STEPS.length) * 100} />
@@ -185,7 +210,14 @@ function GiftBoxWizard() {
 
           {step === 5 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold">Write a gift note</h3>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Write a gift note</h3>
+                <AiGreetingButton
+                  defaultOccasion="birthday"
+                  maxChars={500}
+                  onApply={(msg) => setNote(msg)}
+                />
+              </div>
               <Textarea
                 rows={5}
                 maxLength={500}
@@ -195,6 +227,7 @@ function GiftBoxWizard() {
               />
               <p className="mt-1 text-xs text-muted-foreground">{note.length}/500</p>
             </div>
+
           )}
 
           {step === 6 && priced && (
