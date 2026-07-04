@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouteContext, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
@@ -21,15 +21,13 @@ function safeTarget(t: string) {
 
 export const Route = createFileRoute("/auth/sign-in")({
   validateSearch: zodValidator(searchSchema),
-  beforeLoad: ({ context, search }) => {
-    if (context.user) throw redirect({ href: safeTarget(search.redirect) });
-  },
   head: () => ({ meta: [{ title: "Sign in — Giftty" }, { name: "robots", content: "noindex" }] }),
   component: SignInPage,
 });
 
 function SignInPage() {
   const search = Route.useSearch();
+  const { user } = useRouteContext({ from: "__root__" });
   const navigate = useNavigate();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -48,6 +46,20 @@ function SignInPage() {
     },
     onError: () => setError("Something went wrong. Please try again."),
   });
+
+  if (user) {
+    return (
+      <div className="container-page flex items-center justify-center py-10 md:py-16">
+        <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 text-center md:p-8">
+          <h1 className="font-display text-2xl font-bold">You're signed in</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Continue to your account as {user.email}.</p>
+          <Button asChild className="mt-6 h-11 w-full">
+            <a href={safeTarget(search.redirect)}>Continue</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-page flex items-center justify-center py-10 md:py-16">
