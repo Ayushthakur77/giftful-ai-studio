@@ -1,8 +1,10 @@
-import { Link } from "@tanstack/react-router";
-import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown } from "lucide-react";
+import { Link, useRouteContext, useRouter } from "@tanstack/react-router";
+import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown, LogOut, Shield } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { signOutFn } from "@/lib/auth.functions";
 import { categories } from "@/lib/mock-data";
 
 const primaryNav = [
@@ -17,10 +19,18 @@ const primaryNav = [
 ] as const;
 
 export function SiteHeader() {
+  const { user } = useRouteContext({ from: "__root__" });
+  const router = useRouter();
+  async function handleSignOut() {
+    await signOutFn({});
+    await router.invalidate();
+    router.navigate({ to: "/" });
+  }
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Top row */}
       <div className="container-page flex h-14 items-center gap-3 md:h-16">
+
         {/* Mobile menu */}
         <Sheet>
           <SheetTrigger asChild>
@@ -55,12 +65,29 @@ export function SiteHeader() {
               <Link to="/help" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
                 Help
               </Link>
-              <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Sign in
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
+                    Account
+                  </Link>
+                  {user.isSuperAdmin && (
+                    <Link to="/admin/dashboard" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
+                      Admin panel
+                    </Link>
+                  )}
+                  <button onClick={handleSignOut} className="rounded-md px-3 py-3 text-left text-sm font-medium hover:bg-muted">
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
+                  Sign in
+                </Link>
+              )}
             </nav>
           </SheetContent>
         </Sheet>
+
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-1.5" aria-label="Giftty home">
