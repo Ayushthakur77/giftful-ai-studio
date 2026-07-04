@@ -54,7 +54,7 @@ function SignInPage() {
           <h1 className="font-display text-2xl font-bold">You're signed in</h1>
           <p className="mt-2 text-sm text-muted-foreground">Continue to your account as {user.email}.</p>
           <Button asChild className="mt-6 h-11 w-full">
-            <Link to={safeTarget(search.redirect)}>Continue</Link>
+            <a href={safeTarget(search.redirect)}>Continue</a>
           </Button>
         </div>
       </div>
