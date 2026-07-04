@@ -1,124 +1,70 @@
+# Phase 5 — Core E-Commerce Engine
 
-# Phase 4a — Backend Foundation
+Phase 5 depends on commerce tables + services that were stubbed in 4a but never implemented. I'll fold that work in as **Phase 4b** and then build the Phase 5 UI on top of it, in one drop.
 
-Goal: ship the portable spine (DB + auth + RBAC + adapters + env validation) so 4b (commerce) and 4c (admin/AI) drop in cleanly. No vendor lock-in. Neon Postgres via Drizzle. Zero business logic yet — that's 4b/4c.
+## Scope
 
-## Folder layout added
+### 4b — Commerce foundation (server)
+Finish the Drizzle schema stubs and add repositories + services for:
 
-```text
-src/server/
-  config/env.ts              # Zod-validated env, read inside server boundary
-  db/
-    client.ts                # drizzle(postgres-js) singleton
-    schema/                  # one file per domain, re-exported from index.ts
-      users.ts               # users, accounts, sessions, verification_tokens, user_roles
-      addresses.ts
-      catalog.ts             # categories, occasions, recipient_types (stubs)
-      products.ts            # products, product_images, variants, personalization_fields (stubs)
-      commerce.ts            # carts, cart_items, orders, order_items, payments (stubs, 4b fills)
-      giftbox.ts             # gift_boxes, gift_box_items, greeting_cards, ribbons, fillers (stubs)
-      marketing.ts           # coupons, coupon_usage, homepage_sections, banners (stubs)
-      ops.ts                 # inventory, inventory_movements, stock_reservations (stubs)
-      support.ts             # reviews, review_images, tickets, notifications (stubs)
-      audit.ts               # audit_logs, error_logs, ai_logs, activity_logs
-    migrations/              # drizzle-kit generated SQL
-    seed.ts                  # seeds super_admin role + Super Admin user from env
-  services/                  # interfaces + default impls (business code uses these)
-    auth.service.ts
-    storage.service.ts
-    email.service.ts
-    payment.service.ts
-    ai.service.ts
-  adapters/                  # vendor wrappers behind service interfaces
-    auth/authjs.adapter.ts
-    storage/s3.adapter.ts    # R2 via S3 API (stub, wired in 4b)
-    email/resend.adapter.ts  # stub
-    payment/razorpay.adapter.ts  # stub
-    ai/openai-compat.adapter.ts  # stub, LOVABLE_API_KEY for dev
-  middleware/
-    require-auth.ts          # TanStack server-fn middleware, returns { userId, roles }
-    require-role.ts          # RBAC: requireRole('super_admin')
-    audit.ts                 # writes audit_logs on protected mutations
-  repositories/              # thin data access; only place that imports drizzle
-    users.repo.ts
-    roles.repo.ts
-    audit.repo.ts
-drizzle.config.ts
-```
+- `categories` (unlimited depth, `parent_id`, `slug`, `display_order`, `is_hidden`, `type`: standard | occasion | relationship | festival | price | trending | featured | recent)
+- `products` (SKU, slug, title, description, base_price, sale_price, currency, stock, weight_g, is_active, is_customizable, is_giftbox_compatible, rating_avg, rating_count)
+- `product_images`, `product_variants`, `product_tags`, `product_categories` (M:N)
+- `personalization_options` (per product: name, message, font, color, image upload, extra_cost, max_chars, allowed_formats, max_upload_kb)
+- `giftbox_templates` (empty boxes: capacity_slots, max_weight_g, allowed_category_ids[], allowed_product_ids[], price, image)
+- `giftbox_ribbons`, `giftbox_fillers`, `greeting_cards` (each with price + image)
+- `readymade_giftboxes` + `readymade_giftbox_items`
+- `wishlists` + `wishlist_items` (user-scoped, unique on (user_id, product_id))
+- `carts` + `cart_items` (user_id nullable → guest carts keyed by cookie `giftty_cart`)
+- `cart_item_personalization`, `cart_item_giftbox` (structured JSONB payload validated by Zod)
+- `coupons` (stub for Phase 6; schema only)
 
-Golden import direction: `routes → server/functions → services → repositories → drizzle`. Adapters implement service interfaces; nothing imports adapters directly.
+Services:
 
-## Database (Phase 4a — creates & seeds only)
+- `catalog.service.ts` — listCategories(tree), listProducts(filters, sort, page), getProduct(slug), search(q), suggestions(q)
+- `wishlist.service.ts` — list/add/remove/move-to-cart (auth required)
+- `cart.service.ts` — get/add/update/remove/merge-guest-on-login
+- `giftbuilder.service.ts` — validate(box, items, ribbon, filler, card, note, personalization) → priced draft
+- `price.service.ts` — single source of truth for line + cart totals (products, personalization surcharges, box/ribbon/filler/card add-ons, subtotal, tax stub, shipping stub, grand total). All money in integer minor units (paise).
 
-Full tables **created** in 4a (used by auth immediately):
-`users`, `accounts`, `sessions`, `verification_tokens`, `user_roles`, `audit_logs`.
+Server functions in `src/lib/*.functions.ts` for each service. Zod validators. Server enforces stock, capacity, weight, allowed_products, price recompute. Client only displays server totals.
 
-Tables **defined but empty** (schema shipped so 4b just fills logic):
-addresses, categories, occasions, recipient_types, products, product_images, product_variants, personalization_fields, gift_boxes, gift_box_items, greeting_cards, ribbons, fillers, carts, cart_items, wishlists, orders, order_items, payments, coupons, coupon_usage, reviews, review_images, notifications, inventory, inventory_movements, stock_reservations, homepage_sections, banners, festival_campaigns, ai_logs, error_logs, activity_logs, store_settings.
+Seed: ~20 demo products across 4 categories, 3 empty boxes, 2 readymade boxes, ribbons/fillers/cards — so the UI is immediately shoppable.
 
-Conventions (enforced everywhere):
-- `id uuid` PK via `gen_random_uuid()`
-- Money in `paise` (int)
-- Timestamps `created_at`, `updated_at` (trigger), `deleted_at` on soft-delete entities
-- FKs with explicit `ON DELETE`
-- Indexes on every FK + slug + status columns
-- Enum types via Postgres `pgEnum`
-- No RLS (portable), authorization enforced in server functions
+### Phase 5 — Shopping UI
+Wire and build:
 
-## Super Admin rules (baked in)
+- **Header search** with debounced suggestions (`/api/search/suggest`), recent searches in `localStorage`, popular searches from server.
+- **Category tree** in mega-menu + `/c/$slug` landing.
+- **Catalog `/shop`** — grid/list toggle, filter sidebar (price range, category, occasion, recipient, rating, availability, discount, customizable, giftbox-compatible), sort dropdown, pagination, empty state.
+- **Product card** — image, price, discount %, rating, wishlist heart, quick-view dialog, Add to Cart, Buy Now, Personalize badge, Gift-Box-Compatible badge.
+- **Product detail `/p/$slug`** — gallery with zoom, tabs (description, specs, reviews stub), personalization panel with live extra-cost preview, delivery estimator (pin code → server stub), related + recommended + recently-viewed (localStorage).
+- **Gift Builder `/gift-builder`** — 8-step wizard (Box → Products → Ribbon → Filler → Card → Note → Summary → Add to Cart) with server-side validate-on-next, edit-any-step, capacity/weight meter.
+- **Ready-made boxes `/gift-boxes`** + detail page showing contents.
+- **Wishlist `/wishlist`** — auth-gated, count badge in header, move-to-cart.
+- **Cart `/cart`** — line editor, personalization summary, giftbox summary, coupon input (disabled placeholder until Phase 6), server-computed totals panel, Move-to-Wishlist, Proceed-to-Checkout (routes to Phase 6 placeholder).
+- **Guest cart** cookie; on sign-in, merge into user cart.
 
-- `user_roles` table with pgEnum `app_role` = `super_admin`, `customer`, `staff` (future).
-- Migration seed script (`src/server/db/seed.ts`, run once via `bun run db:seed`):
-  1. Reads `SUPER_ADMIN_EMAIL` + `SUPER_ADMIN_PASSWORD` from env.
-  2. Argon2-hashes password (never stored plaintext).
-  3. Upserts user + `super_admin` role. Idempotent.
-- Public sign-up (`auth.service.signUpEmail`) hard-codes role = `customer`. Cannot elevate.
-- Google OAuth callback: if email === `SUPER_ADMIN_EMAIL` → attach `super_admin` role; else `customer`. Comparison server-side only.
-- `requireRole('super_admin')` middleware guards every `/admin/*` server fn.
-- Admin route tree gated in `beforeLoad` — hidden from all others (menu, links, APIs).
-- Every super_admin mutation writes to `audit_logs` (actor, action, entity, before/after JSON, ip, ua).
-- Future staff accounts: only created via `admin.createStaff` server fn (super_admin only). No public path.
+## Technical notes (for me)
 
-## Auth (Auth.js core + Drizzle adapter)
+- All money as `integer` paise; format at render with `Intl.NumberFormat("en-IN")`.
+- Filter state → URL search params via `validateSearch` + `zodValidator` (Phase 5's canonical read shape).
+- TanStack Query for all reads; `ensureQueryData` in loaders, `useSuspenseQuery` in components. `defaultPreloadStaleTime: 0` already set in 4a.
+- Server functions using `requireAuth`/`requireRole` never called from public route loaders — call from components via `useServerFn`.
+- Cart/wishlist mutations invalidate `['cart']` / `['wishlist']` query keys; header badges subscribe.
+- Personalization + giftbox payloads stored as validated JSONB with a Zod schema shared client + server.
+- Image uploads for personalization deferred — Phase 5 accepts URL/base64 stub through storage.service (already stubbed) and validates size; real upload lands with storage provider keys.
+- No checkout, no payments, no coupons execution, no reviews write — those are Phase 6/7.
 
-- Credentials provider (email + argon2 password) + Google OAuth.
-- DB sessions (not JWT), 30-day sliding.
-- httpOnly + Secure + SameSite=Lax cookies.
-- CSRF via Auth.js.
-- Password reset via signed token in `verification_tokens`.
-- Server fns: `auth.signUp`, `auth.signIn`, `auth.signOut`, `auth.requestPasswordReset`, `auth.resetPassword`, `auth.me`.
+## Deliverable order in the drop
 
-## Env validation (`src/server/config/env.ts`)
+1. Extend `src/server/db/schema.ts` with full commerce tables.
+2. Add repositories under `src/server/db/repositories/`.
+3. Add services under `src/server/services/`.
+4. Add server functions under `src/lib/*.functions.ts`.
+5. Add seed data to `src/server/db/seed.ts` (idempotent).
+6. Build routes + components under `src/routes/` and `src/components/shop/`, `src/components/gift-builder/`, `src/components/cart/`.
+7. Update header (search box + wishlist/cart badges).
+8. Replace any remaining mock-data usage on the home page with real featured/trending queries.
 
-Zod schema, called from server-only boundary. Required in 4a: `DATABASE_URL`, `AUTH_SECRET`, `SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PASSWORD`. Optional (warn, don't crash): Google, R2, Razorpay, Resend, AI. Adapter throws a clear "not configured" error when called before its vars are set — nothing silently no-ops.
-
-## Deliverables checklist (4a)
-
-- [ ] Drizzle + `postgres-js` + `drizzle-kit` + `@auth/core` + `@auth/drizzle-adapter` + `argon2` + `zod` installed
-- [ ] All schema files created (full for auth tables; stubs for 4b/4c tables)
-- [ ] `drizzle.config.ts` + `bun run db:generate` / `db:migrate` / `db:seed` scripts
-- [ ] Env validator with clear error messages
-- [ ] Auth service + Auth.js adapter working end-to-end (sign up as customer, sign in, sign out, me)
-- [ ] Super Admin seeded from env, argon2 hashed, idempotent
-- [ ] RBAC middleware + `/_admin` route guard
-- [ ] Audit log writer wired into role/staff mutations
-- [ ] Wire real sign-in/sign-up pages (`/auth/*`) to `auth.*` server fns
-- [ ] README section: `bun install → set DATABASE_URL → db:migrate → db:seed → dev`
-
-## What 4a does NOT ship (on purpose)
-
-- Products/cart/orders/payments/inventory business logic → **4b**
-- Admin CRUD UI, AI endpoints, coupons, reviews, analytics → **4c**
-- R2 uploads, Razorpay wiring, Resend emails → stubs only; enabled when you supply keys
-
-## Verification before I stop
-
-1. `bun run build` clean.
-2. `tsgo` clean.
-3. Migration SQL reviewed (no vendor-specific extensions).
-4. Manual: sign up new customer → verify `role=customer` in DB. Sign in as Super Admin → `/admin` loads. Sign in as customer → `/admin` redirects to `/`.
-5. Attempted role escalation via crafted request → rejected + audit log entry.
-
----
-
-Reply **"Approved, build 4a"** and I execute. If anything above should change (extra table now, different seed rule, skip Google OAuth for now), tell me and I revise before writing code.
+Reply **"Approved, build Phase 5"** and I'll drop it in one shot. It's a large drop — expect ~40–60 new/edited files.
