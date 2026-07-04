@@ -1,10 +1,13 @@
 import { Link, useRouteContext, useRouter } from "@tanstack/react-router";
-import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown, LogOut, Shield } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Heart, ShoppingBag, User, Menu, Package, Gift, Sparkles, ChevronDown, LogOut, Shield, Bell } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { signOutFn } from "@/lib/auth.functions";
+import { listNotificationsFn, markAllNotificationsReadFn, unreadNotificationsCountFn } from "@/lib/notifications.functions";
 import { categories as navCategories } from "@/lib/catalog";
 import { useCart, useWishlist } from "@/lib/store";
 
@@ -26,14 +29,25 @@ const primaryNav = [
 export function SiteHeader() {
   const { user } = useRouteContext({ from: "__root__" });
   const router = useRouter();
+  const qc = useQueryClient();
   const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.quantity, 0));
   const wishlistCount = useWishlist((s) => s.slugs.length);
 
+  const { data: unread } = useQuery({
+    queryKey: ["notifications-count"],
+    queryFn: () => unreadNotificationsCountFn(),
+    enabled: !!user,
+    refetchInterval: 60_000,
+  });
+  const unreadCount = unread?.count ?? 0;
+
   async function handleSignOut() {
     await signOutFn({});
+    qc.clear();
     await router.invalidate();
     router.navigate({ to: "/" });
   }
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       {/* Top row */}
@@ -61,39 +75,26 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="my-2 border-t border-border" />
-              <Link to="/account/orders" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Orders
-              </Link>
-              <Link to="/account/wishlist" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Wishlist
-              </Link>
-              <Link to="/help" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Help
-              </Link>
+              <Link to="/account/orders" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">Orders</Link>
+              <Link to="/account/wishlist" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">Wishlist</Link>
+              <Link to="/account/addresses" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">Addresses</Link>
+              <Link to="/help" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">Help</Link>
               <div className="my-2 border-t border-border" />
               {user ? (
                 <>
                   <div className="px-3 py-2 text-xs text-muted-foreground">Signed in as<br /><span className="text-foreground">{user.email}</span></div>
-                  <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                    My account
-                  </Link>
+                  <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">My account</Link>
                   {user.isSuperAdmin && (
                     <Link to="/admin/dashboard" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
                       Admin panel
                     </Link>
                   )}
-                  <button onClick={handleSignOut} className="rounded-md px-3 py-3 text-left text-sm font-medium hover:bg-muted">
-                    Sign out
-                  </button>
+                  <button onClick={handleSignOut} className="rounded-md px-3 py-3 text-left text-sm font-medium hover:bg-muted">Sign out</button>
                 </>
               ) : (
                 <>
-                  <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                    Sign in
-                  </Link>
-                  <Link to="/auth/sign-up" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
-                    Create account
-                  </Link>
+                  <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">Sign in</Link>
+                  <Link to="/auth/sign-up" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">Create account</Link>
                 </>
               )}
             </nav>
@@ -115,9 +116,7 @@ export function SiteHeader() {
           method="get"
           className="ml-4 hidden flex-1 md:block"
         >
-          <label htmlFor="site-search" className="sr-only">
-            Search gifts
-          </label>
+          <label htmlFor="site-search" className="sr-only">Search gifts</label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
             <Input
@@ -132,17 +131,19 @@ export function SiteHeader() {
 
         {/* Actions */}
         <div className="ml-auto flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            aria-label="Search"
-            className="md:hidden"
-          >
-            <Link to="/search">
-              <Search className="size-5" />
-            </Link>
+          <Button variant="ghost" size="icon" asChild aria-label="Search" className="md:hidden">
+            <Link to="/search"><Search className="size-5" /></Link>
           </Button>
+
+          {user && (
+            <NotificationBell unreadCount={unreadCount} onMarkAll={() => {
+              markAllNotificationsReadFn().then(() => {
+                qc.invalidateQueries({ queryKey: ["notifications"] });
+                qc.invalidateQueries({ queryKey: ["notifications-count"] });
+              });
+            }} />
+          )}
+
           <Button variant="ghost" size="icon" asChild aria-label={`Wishlist (${wishlistCount})`} className="hidden md:inline-flex">
             <Link to="/account/wishlist" className="relative">
               <Heart className="size-5" />
@@ -153,9 +154,7 @@ export function SiteHeader() {
           </Button>
 
           <Button variant="ghost" size="icon" asChild aria-label="Orders" className="hidden md:inline-flex">
-            <Link to="/account/orders">
-              <Package className="size-5" />
-            </Link>
+            <Link to="/account/orders"><Package className="size-5" /></Link>
           </Button>
           {user ? (
             <DropdownMenu>
@@ -167,9 +166,12 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="truncate">{user.name ?? user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link to="/account">My account</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account">Dashboard</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/profile">Profile</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/account/orders">Orders</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/addresses">Addresses</Link></DropdownMenuItem>
                 <DropdownMenuItem asChild><Link to="/account/wishlist">Wishlist</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/settings">Settings</Link></DropdownMenuItem>
                 {user.isSuperAdmin && (
                   <>
                     <DropdownMenuSeparator />
@@ -240,5 +242,49 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function NotificationBell({ unreadCount, onMarkAll }: { unreadCount: number; onMarkAll: () => void }) {
+  const { data } = useQuery({ queryKey: ["notifications"], queryFn: () => listNotificationsFn() });
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={`Notifications (${unreadCount})`} className="relative hidden md:inline-flex">
+          <Bell className="size-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{unreadCount}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-80 p-0">
+        <div className="flex items-center justify-between border-b border-border p-3">
+          <p className="text-sm font-semibold">Notifications</p>
+          {unreadCount > 0 && (
+            <button className="text-xs text-primary hover:underline" onClick={onMarkAll}>Mark all read</button>
+          )}
+        </div>
+        {data?.items && data.items.length > 0 ? (
+          <ul className="max-h-80 divide-y divide-border overflow-y-auto">
+            {data.items.slice(0, 8).map((n) => (
+              <li key={n.id} className="flex items-start gap-2 p-3">
+                <span className={`mt-1.5 inline-block size-2 shrink-0 rounded-full ${n.readAt ? "bg-muted-foreground/30" : "bg-primary"}`} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{n.title}</p>
+                  {n.body && <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="p-6 text-center text-sm text-muted-foreground">No notifications yet.</p>
+        )}
+        <div className="border-t border-border p-2">
+          <Link to="/account/settings" className="block rounded px-2 py-1.5 text-center text-xs font-medium text-primary hover:bg-muted">
+            View all in settings
+          </Link>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
