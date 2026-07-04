@@ -6,6 +6,7 @@ import { signUpFn } from "@/lib/auth.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export const Route = createFileRoute("/auth/sign-up")({
   beforeLoad: ({ context }) => {
@@ -41,6 +42,14 @@ function SignUpPage() {
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 md:p-8">
         <h1 className="font-display text-2xl font-bold">Create your account</h1>
         <p className="mt-1 text-sm text-muted-foreground">Start sending joy across India.</p>
+        <div className="mt-6">
+          <GoogleSignInButton redirectAfter="/account" label="Sign up with Google" />
+        </div>
+        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          <span>or</span>
+          <span className="h-px flex-1 bg-border" />
+        </div>
         <form
           className="mt-6 space-y-4"
           onSubmit={(e) => {
