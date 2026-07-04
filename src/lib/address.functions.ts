@@ -1,16 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-
-const SESSION_COOKIE = "giftty_session";
-
-async function requireUserId(): Promise<string> {
-  const { getCookie } = await import("@tanstack/react-start/server");
-  const token = getCookie(SESSION_COOKIE);
-  const { authService } = await import("@/server/services/auth.service");
-  const me = await authService.me(token);
-  if (!me) throw new Response("Unauthorized", { status: 401 });
-  return me.id;
-}
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const addressPayload = z.object({
   label: z.string().trim().max(40).optional().nullable(),
@@ -25,51 +15,144 @@ const addressPayload = z.object({
   isDefault: z.boolean().optional().default(false),
 });
 
-export const listAddressesFn = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
-  const { addressService } = await import("@/server/services/address.service");
-  return addressService.list(userId);
-});
+export type AddressPayload = z.infer<typeof addressPayload>;
+
+type DbRow = {
+  id: string;
+  user_id: string;
+  label: string | null;
+  full_name: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Address = {
+  id: string;
+  label: string | null;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+};
+
+function toDto(r: DbRow): Address {
+  return {
+    id: r.id,
+    label: r.label,
+    fullName: r.full_name,
+    phone: r.phone,
+    line1: r.line1,
+    line2: r.line2,
+    city: r.city,
+    state: r.state,
+    pincode: r.pincode,
+    country: r.country,
+    isDefault: r.is_default,
+    createdAt: r.created_at,
+  };
+}
+
+function toRow(p: AddressPayload) {
+  return {
+    label: p.label ?? null,
+    full_name: p.fullName,
+    phone: p.phone,
+    line1: p.line1,
+    line2: p.line2 ?? null,
+    city: p.city,
+    state: p.state,
+    pincode: p.pincode,
+    country: p.country || "IN",
+    is_default: p.isDefault ?? false,
+  };
+}
+
+async function clearOtherDefaults(supabase: any, userId: string, exceptId?: string) {
+  let q = supabase.from("addresses").update({ is_default: false }).eq("user_id", userId).eq("is_default", true);
+  if (exceptId) q = q.neq("id", exceptId);
+  await q;
+}
+
+export const listAddressesFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("addresses")
+      .select("*")
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data as DbRow[]).map(toDto);
+  });
 
 export const createAddressFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => addressPayload.parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    const { addressService } = await import("@/server/services/address.service");
+  .handler(async ({ data, context }) => {
     try {
-      return { ok: true as const, address: await addressService.create(userId, data) };
+      const row = { ...toRow(data), user_id: context.userId };
+      if (row.is_default) await clearOtherDefaults(context.supabase, context.userId);
+      // If user has no addresses yet, make first one default automatically.
+      const { count } = await context.supabase
+        .from("addresses").select("id", { count: "exact", head: true });
+      if ((count ?? 0) === 0) row.is_default = true;
+      const { data: created, error } = await context.supabase
+        .from("addresses").insert(row).select("*").single();
+      if (error) throw new Error(error.message);
+      return { ok: true as const, address: toDto(created as DbRow) };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Failed" };
     }
   });
 
 export const updateAddressFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).and(addressPayload).parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    const { addressService } = await import("@/server/services/address.service");
-    const { id, ...rest } = data;
+  .handler(async ({ data, context }) => {
     try {
-      return { ok: true as const, address: await addressService.update(userId, id, rest) };
+      const { id, ...rest } = data;
+      const row = toRow(rest);
+      if (row.is_default) await clearOtherDefaults(context.supabase, context.userId, id);
+      const { data: updated, error } = await context.supabase
+        .from("addresses").update(row).eq("id", id).select("*").single();
+      if (error) throw new Error(error.message);
+      return { ok: true as const, address: toDto(updated as DbRow) };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Failed" };
     }
   });
 
 export const deleteAddressFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    const { addressService } = await import("@/server/services/address.service");
-    return addressService.remove(userId, data.id);
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase.from("addresses").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true as const };
   });
 
 export const setDefaultAddressFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    const { addressService } = await import("@/server/services/address.service");
-    await addressService.setDefault(userId, data.id);
+  .handler(async ({ data, context }) => {
+    await clearOtherDefaults(context.supabase, context.userId, data.id);
+    const { error } = await context.supabase
+      .from("addresses").update({ is_default: true }).eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true as const };
   });
 
