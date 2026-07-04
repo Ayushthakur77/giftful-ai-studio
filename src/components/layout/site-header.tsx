@@ -141,11 +141,15 @@ export function SiteHeader() {
               <Search className="size-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Wishlist" className="hidden md:inline-flex">
-            <Link to="/account/wishlist">
+          <Button variant="ghost" size="icon" asChild aria-label={`Wishlist (${wishlistCount})`} className="hidden md:inline-flex">
+            <Link to="/account/wishlist" className="relative">
               <Heart className="size-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{wishlistCount}</span>
+              )}
             </Link>
           </Button>
+
           <Button variant="ghost" size="icon" asChild aria-label="Orders" className="hidden md:inline-flex">
             <Link to="/account/orders">
               <Package className="size-5" />
@@ -185,12 +189,16 @@ export function SiteHeader() {
               <Link to="/auth/sign-in">Sign in</Link>
             </Button>
           )}
-          <Button variant="ghost" size="icon" asChild aria-label="Cart">
+          <Button variant="ghost" size="icon" asChild aria-label={`Cart (${cartCount})`}>
             <Link to="/cart" className="relative">
               <ShoppingBag className="size-5" />
-              <span className="sr-only">Cart</span>
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{cartCount}</span>
+              )}
+              <span className="sr-only">Cart ({cartCount})</span>
             </Link>
           </Button>
+
         </div>
       </div>
 
