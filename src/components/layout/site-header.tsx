@@ -69,7 +69,7 @@ export function SiteHeader() {
               {primaryNav.map((item) => (
                 <Link
                   key={item.to}
-                  to={item.to}
+                  to={item.to as any}
                   className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted"
                 >
                   {item.label}
@@ -213,7 +213,7 @@ export function SiteHeader() {
           {primaryNav.map((item) => (
             <Link
               key={item.to}
-              to={item.to}
+              to={item.to as any}
               className="inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
               activeProps={{ className: "bg-muted text-foreground" }}
             >
