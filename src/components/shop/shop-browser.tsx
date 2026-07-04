@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Grid2x2, LayoutList, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,18 +10,21 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
-  listProducts,
   categories as allCategories,
   occasions as allOccasions,
   recipients as allRecipients,
+  discountPct,
+  type Product,
   type CategorySlug,
   type OccasionSlug,
   type RecipientSlug,
   type SortKey,
 } from "@/lib/catalog";
-import { ProductCard } from "@/components/product/product-card";
+import { listPublicProductsFn } from "@/lib/public-catalog.functions";
+import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PackageSearch } from "lucide-react";
+
 
 export type BrowserSearch = {
   q?: string;
