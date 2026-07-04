@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.grant_super_admin_if_matched() FROM PUBLIC, anon, authenticated;
