@@ -53,9 +53,6 @@ export function SiteHeader() {
                 </Link>
               ))}
               <div className="my-2 border-t border-border" />
-              <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                Account
-              </Link>
               <Link to="/account/orders" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
                 Orders
               </Link>
@@ -65,10 +62,12 @@ export function SiteHeader() {
               <Link to="/help" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
                 Help
               </Link>
+              <div className="my-2 border-t border-border" />
               {user ? (
                 <>
+                  <div className="px-3 py-2 text-xs text-muted-foreground">Signed in as<br /><span className="text-foreground">{user.email}</span></div>
                   <Link to="/account" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                    Account
+                    My account
                   </Link>
                   {user.isSuperAdmin && (
                     <Link to="/admin/dashboard" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
@@ -80,13 +79,19 @@ export function SiteHeader() {
                   </button>
                 </>
               ) : (
-                <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
-                  Sign in
-                </Link>
+                <>
+                  <Link to="/auth/sign-in" className="rounded-md px-3 py-3 text-sm font-medium hover:bg-muted">
+                    Sign in
+                  </Link>
+                  <Link to="/auth/sign-up" className="rounded-md px-3 py-3 text-sm font-medium text-primary hover:bg-muted">
+                    Create account
+                  </Link>
+                </>
               )}
             </nav>
           </SheetContent>
         </Sheet>
+
 
 
         {/* Logo */}
