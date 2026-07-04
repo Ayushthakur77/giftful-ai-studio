@@ -65,6 +65,134 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_login_history: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          ip: string | null
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          ip?: string | null
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          diff: Json | null
+          entity: string
+          entity_id: string | null
+          id: string
+          ip: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          diff?: Json | null
+          entity: string
+          entity_id?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          diff?: Json | null
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          ip?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          seo_description: string | null
+          seo_title: string | null
+          show_on_home: boolean
+          slug: string
+          sort_order: number
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_on_home?: boolean
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          show_on_home?: boolean
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupon_redemptions: {
         Row: {
           coupon_id: string
@@ -163,6 +291,289 @@ export type Database = {
           valid_until?: string | null
         }
         Relationships: []
+      }
+      delivery_rules: {
+        Row: {
+          active: boolean
+          base_charge_paise: number
+          cod_available: boolean
+          created_at: string
+          estimated_days_max: number
+          estimated_days_min: number
+          express_available: boolean
+          express_charge_paise: number
+          free_shipping_threshold_paise: number
+          id: string
+          pincode_prefix: string | null
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          base_charge_paise?: number
+          cod_available?: boolean
+          created_at?: string
+          estimated_days_max?: number
+          estimated_days_min?: number
+          express_available?: boolean
+          express_charge_paise?: number
+          free_shipping_threshold_paise?: number
+          id?: string
+          pincode_prefix?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          base_charge_paise?: number
+          cod_available?: boolean
+          created_at?: string
+          estimated_days_max?: number
+          estimated_days_min?: number
+          express_available?: boolean
+          express_charge_paise?: number
+          free_shipping_threshold_paise?: number
+          id?: string
+          pincode_prefix?: string | null
+          state?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      empty_gift_boxes: {
+        Row: {
+          allowed_category_ids: string[]
+          allowed_product_ids: string[]
+          base_price_paise: number
+          capacity_items: number | null
+          card_compatible: boolean
+          color: string | null
+          created_at: string
+          description: string | null
+          filler_compatible: boolean
+          height_mm: number | null
+          id: string
+          images: Json
+          length_mm: number | null
+          material: string | null
+          max_weight_grams: number | null
+          name: string
+          ribbon_compatible: boolean
+          slug: string
+          status: string
+          stock: number
+          updated_at: string
+          visible: boolean
+          width_mm: number | null
+        }
+        Insert: {
+          allowed_category_ids?: string[]
+          allowed_product_ids?: string[]
+          base_price_paise?: number
+          capacity_items?: number | null
+          card_compatible?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          filler_compatible?: boolean
+          height_mm?: number | null
+          id?: string
+          images?: Json
+          length_mm?: number | null
+          material?: string | null
+          max_weight_grams?: number | null
+          name: string
+          ribbon_compatible?: boolean
+          slug: string
+          status?: string
+          stock?: number
+          updated_at?: string
+          visible?: boolean
+          width_mm?: number | null
+        }
+        Update: {
+          allowed_category_ids?: string[]
+          allowed_product_ids?: string[]
+          base_price_paise?: number
+          capacity_items?: number | null
+          card_compatible?: boolean
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          filler_compatible?: boolean
+          height_mm?: number | null
+          id?: string
+          images?: Json
+          length_mm?: number | null
+          material?: string | null
+          max_weight_grams?: number | null
+          name?: string
+          ribbon_compatible?: boolean
+          slug?: string
+          status?: string
+          stock?: number
+          updated_at?: string
+          visible?: boolean
+          width_mm?: number | null
+        }
+        Relationships: []
+      }
+      festivals: {
+        Row: {
+          active: boolean
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          priority: number
+          related_category_ids: string[]
+          related_giftbox_ids: string[]
+          related_product_ids: string[]
+          slug: string
+          start_date: string | null
+          theme_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          priority?: number
+          related_category_ids?: string[]
+          related_giftbox_ids?: string[]
+          related_product_ids?: string[]
+          slug: string
+          start_date?: string | null
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          priority?: number
+          related_category_ids?: string[]
+          related_giftbox_ids?: string[]
+          related_product_ids?: string[]
+          slug?: string
+          start_date?: string | null
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      homepage_sections: {
+        Row: {
+          config: Json
+          created_at: string
+          ends_at: string | null
+          id: string
+          kind: string
+          sort_order: number
+          starts_at: string | null
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind: string
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          kind?: string
+          sort_order?: number
+          starts_at?: string | null
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      inventory_movements: {
+        Row: {
+          actor_id: string | null
+          change: number
+          created_at: string
+          empty_box_id: string | null
+          giftbox_id: string | null
+          id: string
+          note: string | null
+          product_id: string | null
+          reason: string
+          reference_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          change: number
+          created_at?: string
+          empty_box_id?: string | null
+          giftbox_id?: string | null
+          id?: string
+          note?: string | null
+          product_id?: string | null
+          reason: string
+          reference_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          change?: number
+          created_at?: string
+          empty_box_id?: string | null
+          giftbox_id?: string | null
+          id?: string
+          note?: string | null
+          product_id?: string | null
+          reason?: string
+          reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_empty_box_id_fkey"
+            columns: ["empty_box_id"]
+            isOneToOne: false
+            referencedRelation: "empty_gift_boxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_giftbox_id_fkey"
+            columns: ["giftbox_id"]
+            isOneToOne: false
+            referencedRelation: "ready_gift_boxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoices: {
         Row: {
@@ -481,6 +892,122 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          customization: Json
+          description: string | null
+          festival_tags: string[]
+          gift_builder_compatible: boolean
+          height_mm: number | null
+          id: string
+          images: Json
+          is_best_seller: boolean
+          is_featured: boolean
+          is_new_arrival: boolean
+          is_trending: boolean
+          length_mm: number | null
+          low_stock_threshold: number
+          name: string
+          offer_price_paise: number | null
+          price_paise: number
+          related_ids: string[]
+          reserved_stock: number
+          seo_description: string | null
+          seo_title: string | null
+          sku: string | null
+          slug: string
+          status: string
+          stock: number
+          tags: string[]
+          updated_at: string
+          videos: Json
+          view_count: number
+          weight_grams: number | null
+          width_mm: number | null
+          wishlist_count: number
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          customization?: Json
+          description?: string | null
+          festival_tags?: string[]
+          gift_builder_compatible?: boolean
+          height_mm?: number | null
+          id?: string
+          images?: Json
+          is_best_seller?: boolean
+          is_featured?: boolean
+          is_new_arrival?: boolean
+          is_trending?: boolean
+          length_mm?: number | null
+          low_stock_threshold?: number
+          name: string
+          offer_price_paise?: number | null
+          price_paise?: number
+          related_ids?: string[]
+          reserved_stock?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          sku?: string | null
+          slug: string
+          status?: string
+          stock?: number
+          tags?: string[]
+          updated_at?: string
+          videos?: Json
+          view_count?: number
+          weight_grams?: number | null
+          width_mm?: number | null
+          wishlist_count?: number
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          customization?: Json
+          description?: string | null
+          festival_tags?: string[]
+          gift_builder_compatible?: boolean
+          height_mm?: number | null
+          id?: string
+          images?: Json
+          is_best_seller?: boolean
+          is_featured?: boolean
+          is_new_arrival?: boolean
+          is_trending?: boolean
+          length_mm?: number | null
+          low_stock_threshold?: number
+          name?: string
+          offer_price_paise?: number | null
+          price_paise?: number
+          related_ids?: string[]
+          reserved_stock?: number
+          seo_description?: string | null
+          seo_title?: string | null
+          sku?: string | null
+          slug?: string
+          status?: string
+          stock?: number
+          tags?: string[]
+          updated_at?: string
+          videos?: Json
+          view_count?: number
+          weight_grams?: number | null
+          width_mm?: number | null
+          wishlist_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -505,6 +1032,170 @@ export type Database = {
           name?: string | null
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      ready_gift_boxes: {
+        Row: {
+          card: string | null
+          created_at: string
+          description: string | null
+          empty_box_id: string | null
+          festival_tags: string[]
+          filler: string | null
+          id: string
+          images: Json
+          is_featured: boolean
+          is_trending: boolean
+          items: Json
+          name: string
+          offer_price_paise: number | null
+          price_paise: number
+          ribbon: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          status: string
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          card?: string | null
+          created_at?: string
+          description?: string | null
+          empty_box_id?: string | null
+          festival_tags?: string[]
+          filler?: string | null
+          id?: string
+          images?: Json
+          is_featured?: boolean
+          is_trending?: boolean
+          items?: Json
+          name: string
+          offer_price_paise?: number | null
+          price_paise?: number
+          ribbon?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          status?: string
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          card?: string | null
+          created_at?: string
+          description?: string | null
+          empty_box_id?: string | null
+          festival_tags?: string[]
+          filler?: string | null
+          id?: string
+          images?: Json
+          is_featured?: boolean
+          is_trending?: boolean
+          items?: Json
+          name?: string
+          offer_price_paise?: number | null
+          price_paise?: number
+          ribbon?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          status?: string
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ready_gift_boxes_empty_box_id_fkey"
+            columns: ["empty_box_id"]
+            isOneToOne: false
+            referencedRelation: "empty_gift_boxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          body: string | null
+          created_at: string
+          giftbox_id: string | null
+          id: string
+          images: Json
+          is_featured: boolean
+          product_id: string | null
+          rating: number
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          giftbox_id?: string | null
+          id?: string
+          images?: Json
+          is_featured?: boolean
+          product_id?: string | null
+          rating: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          giftbox_id?: string | null
+          id?: string
+          images?: Json
+          is_featured?: boolean
+          product_id?: string | null
+          rating?: number
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_giftbox_id_fkey"
+            columns: ["giftbox_id"]
+            isOneToOne: false
+            referencedRelation: "ready_gift_boxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_settings: {
+        Row: {
+          is_public: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          is_public?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          is_public?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
         }
         Relationships: []
       }
