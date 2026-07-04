@@ -52,8 +52,6 @@ import { Route as AccountAddressesRouteImport } from './routes/account.addresses
 import { Route as PSlugCustomizeRouteImport } from './routes/p.$slug.customize'
 import { Route as CCategorySubcategoryRouteImport } from './routes/c.$category.$subcategory'
 import { Route as AccountOrdersIdRouteImport } from './routes/account.orders.$id'
-import { Route as ApiAuthGoogleStartRouteImport } from './routes/api/auth.google.start'
-import { Route as ApiAuthGoogleCallbackRouteImport } from './routes/api/auth.google.callback'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -270,16 +268,6 @@ const AccountOrdersIdRoute = AccountOrdersIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AccountOrdersRoute,
 } as any)
-const ApiAuthGoogleStartRoute = ApiAuthGoogleStartRouteImport.update({
-  id: '/api/auth/google/start',
-  path: '/api/auth/google/start',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthGoogleCallbackRoute = ApiAuthGoogleCallbackRouteImport.update({
-  id: '/api/auth/google/callback',
-  path: '/api/auth/google/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -325,8 +313,6 @@ export interface FileRoutesByFullPath {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
-  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
-  '/api/auth/google/start': typeof ApiAuthGoogleStartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -371,8 +357,6 @@ export interface FileRoutesByTo {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
-  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
-  '/api/auth/google/start': typeof ApiAuthGoogleStartRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -419,8 +403,6 @@ export interface FileRoutesById {
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
-  '/api/auth/google/callback': typeof ApiAuthGoogleCallbackRoute
-  '/api/auth/google/start': typeof ApiAuthGoogleStartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -468,8 +450,6 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
-    | '/api/auth/google/callback'
-    | '/api/auth/google/start'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -514,8 +494,6 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
-    | '/api/auth/google/callback'
-    | '/api/auth/google/start'
   id:
     | '__root__'
     | '/'
@@ -561,8 +539,6 @@ export interface FileRouteTypes {
     | '/account/orders/$id'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
-    | '/api/auth/google/callback'
-    | '/api/auth/google/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -590,8 +566,6 @@ export interface RootRouteChildren {
   CCategoryRoute: typeof CCategoryRouteWithChildren
   OOccasionRoute: typeof OOccasionRoute
   PSlugRoute: typeof PSlugRouteWithChildren
-  ApiAuthGoogleCallbackRoute: typeof ApiAuthGoogleCallbackRoute
-  ApiAuthGoogleStartRoute: typeof ApiAuthGoogleStartRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -897,20 +871,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountOrdersIdRouteImport
       parentRoute: typeof AccountOrdersRoute
     }
-    '/api/auth/google/start': {
-      id: '/api/auth/google/start'
-      path: '/api/auth/google/start'
-      fullPath: '/api/auth/google/start'
-      preLoaderRoute: typeof ApiAuthGoogleStartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/google/callback': {
-      id: '/api/auth/google/callback'
-      path: '/api/auth/google/callback'
-      fullPath: '/api/auth/google/callback'
-      preLoaderRoute: typeof ApiAuthGoogleCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -1022,8 +982,6 @@ const rootRouteChildren: RootRouteChildren = {
   CCategoryRoute: CCategoryRouteWithChildren,
   OOccasionRoute: OOccasionRoute,
   PSlugRoute: PSlugRouteWithChildren,
-  ApiAuthGoogleCallbackRoute: ApiAuthGoogleCallbackRoute,
-  ApiAuthGoogleStartRoute: ApiAuthGoogleStartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
