@@ -16,10 +16,12 @@ const primaryNav = [
   { to: "/c/cakes", label: "Cakes" },
   { to: "/c/chocolates", label: "Chocolates" },
   { to: "/c/hampers", label: "Hampers" },
-  { to: "/c/corporate", label: "Corporate" },
+  { to: "/gift-boxes", label: "Gift Boxes", icon: Gift },
   { to: "/gift-box", label: "Build a Box", icon: Gift },
+  { to: "/c/corporate", label: "Corporate" },
   { to: "/ai-finder", label: "AI Finder", icon: Sparkles },
 ] as const;
+
 
 export function SiteHeader() {
   const { user } = useRouteContext({ from: "__root__" });

@@ -6,7 +6,13 @@ import { OccasionTile } from "@/components/marketing/occasion-tile";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { ProductCard } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
-import { products, occasions, recipients, boxBuilderImage } from "@/lib/mock-data";
+import {
+  occasions,
+  recipients,
+  boxBuilderImage,
+  products,
+  listProducts,
+} from "@/lib/catalog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,22 +37,24 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const personalized = listProducts({ personalizableOnly: true }, "popularity").slice(0, 5);
+  const trending = products.filter((p) => p.isTrending).slice(0, 5);
+  const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 5);
+  const festival = listProducts({ occasion: "diwali" }, "popularity").slice(0, 5);
+  const readyBoxLike = listProducts({ category: "hampers" }, "popularity").slice(0, 5);
+
   return (
     <>
       <HeroBanner />
       <TrustStrip />
 
-      {/* Occasions */}
       <section className="container-page py-8 md:py-10">
         <SectionHeader title="Shop by occasion" ctaLabel="See all" ctaTo="/o/birthday" />
         <div className="grid grid-cols-3 gap-3 md:grid-cols-6 md:gap-4">
-          {occasions.map((o) => (
-            <OccasionTile key={o.slug} {...o} />
-          ))}
+          {occasions.map((o) => <OccasionTile key={o.slug} {...o} />)}
         </div>
       </section>
 
-      {/* Recipients */}
       <section className="container-page py-8 md:py-10">
         <SectionHeader title="Shop by recipient" />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-6 md:gap-4">
@@ -54,6 +62,7 @@ function HomePage() {
             <Link
               key={r.slug}
               to="/search"
+              search={{ recipient: r.slug }}
               className="flex min-h-11 items-center justify-center rounded-md border border-border bg-card px-4 py-4 text-center text-sm font-medium hover:bg-muted"
             >
               {r.name}
@@ -62,35 +71,24 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Personalized rail */}
-      <ProductRail
-        title="Made just for them"
-        subtitle="Personalized gifts they'll cherish forever"
-        ctaLabel="Shop all"
-        ctaTo="/c/personalized"
-      >
-        {products.filter((p) => p.personalizable).concat(products.slice(0, 3)).slice(0, 5).map((p) => (
-          <ProductCard key={p.slug} product={p} />
-        ))}
-      </ProductRail>
+      {personalized.length > 0 && (
+        <ProductRail title="Made just for them" subtitle="Personalized gifts they'll cherish forever" ctaLabel="Shop all" ctaTo="/c/personalized">
+          {personalized.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
 
-      {/* Gift Box Builder promo */}
       <section className="container-page py-8 md:py-10">
         <div className="grid overflow-hidden rounded-lg border border-border bg-surface md:grid-cols-2">
           <div className="flex flex-col justify-center gap-4 p-6 md:p-10">
             <div className="inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
               <Gift className="size-3.5" /> Build Your Own Box
             </div>
-            <h2 className="font-display text-2xl font-bold md:text-3xl">
-              A gift box, exactly the way you want it.
-            </h2>
+            <h2 className="font-display text-2xl font-bold md:text-3xl">A gift box, exactly the way you want it.</h2>
             <p className="max-w-md text-sm text-muted-foreground md:text-base">
               Pick a box, add favourites, write a note, and we'll pack it with love.
             </p>
             <div>
-              <Button asChild size="lg" className="h-11">
-                <Link to="/gift-box">Start building</Link>
-              </Button>
+              <Button asChild size="lg" className="h-11"><Link to="/gift-box">Start building</Link></Button>
             </div>
           </div>
           <div className="relative aspect-[4/3] md:aspect-auto">
@@ -99,7 +97,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* AI Finder promo */}
       <section className="container-page py-8 md:py-10">
         <div className="flex flex-col items-center justify-between gap-4 rounded-lg border border-border bg-primary p-6 text-primary-foreground md:flex-row md:p-8">
           <div className="flex items-start gap-3">
@@ -109,29 +106,32 @@ function HomePage() {
               <p className="mt-1 text-sm opacity-90 md:text-base">Tell us about them. Our AI picks the perfect gift in seconds.</p>
             </div>
           </div>
-          <Button asChild size="lg" variant="secondary" className="h-11 shrink-0">
-            <Link to="/ai-finder">Try AI Gift Finder</Link>
-          </Button>
+          <Button asChild size="lg" variant="secondary" className="h-11 shrink-0"><Link to="/ai-finder">Try AI Gift Finder</Link></Button>
         </div>
       </section>
 
-      <ProductRail title="Trending now" subtitle="Loved this week across India" ctaLabel="See all" ctaTo="/c/personalized">
-        {products.slice(0, 5).map((p) => <ProductCard key={p.slug} product={p} />)}
+      {trending.length > 0 && (
+        <ProductRail title="Trending now" subtitle="Loved this week across India" ctaLabel="See all" ctaTo="/search">
+          {trending.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
+
+      <ProductRail title="Ready-made gift boxes" ctaLabel="Shop hampers" ctaTo="/gift-boxes">
+        {readyBoxLike.map((p) => <ProductCard key={p.slug} product={p} />)}
       </ProductRail>
 
-      <ProductRail title="Ready-made gift boxes" ctaLabel="Shop hampers" ctaTo="/c/hampers">
-        {products.slice(3, 8).map((p) => <ProductCard key={p.slug} product={p} />)}
-      </ProductRail>
+      {festival.length > 0 && (
+        <ProductRail title="Festival collection" subtitle="Handpicked for the season" ctaLabel="Explore" ctaTo="/o/diwali">
+          {festival.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
 
-      <ProductRail title="Festival collection" subtitle="Handpicked for the season" ctaLabel="Explore" ctaTo="/o/diwali">
-        {products.slice(2, 7).map((p) => <ProductCard key={p.slug} product={p} />)}
-      </ProductRail>
+      {bestSellers.length > 0 && (
+        <ProductRail title="Best sellers" ctaLabel="See all" ctaTo="/search">
+          {bestSellers.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
 
-      <ProductRail title="Best sellers" ctaLabel="See all" ctaTo="/c/flowers">
-        {products.slice(0, 5).map((p) => <ProductCard key={p.slug} product={p} />)}
-      </ProductRail>
-
-      {/* Reviews */}
       <section className="container-page py-8 md:py-12">
         <SectionHeader title="What our customers say" />
         <div className="grid gap-4 md:grid-cols-3">
