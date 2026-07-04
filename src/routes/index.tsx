@@ -1,19 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Gift } from "lucide-react";
 import { HeroBanner } from "@/components/marketing/hero-banner";
 import { TrustStrip } from "@/components/marketing/trust-strip";
 import { OccasionTile } from "@/components/marketing/occasion-tile";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
-import { ProductCard } from "@/components/product/product-card";
+import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import { Button } from "@/components/ui/button";
 import { AiHomeRails } from "@/components/ai/ai-home-rail";
-import {
-  occasions,
-  recipients,
-  boxBuilderImage,
-  products,
-  listProducts,
-} from "@/lib/catalog";
+import { occasions, recipients, boxBuilderImage } from "@/lib/catalog";
+import { listPublicProductsFn } from "@/lib/public-catalog.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -37,12 +33,25 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+function useProducts(flag?: "featured" | "trending" | "best_seller" | "new_arrival") {
+  return useQuery({
+    queryKey: ["public-products", flag ?? "all"],
+    queryFn: () => listPublicProductsFn({ data: { flag, limit: 10 } }),
+    staleTime: 60_000,
+  });
+}
+
 function HomePage() {
-  const personalized = listProducts({ personalizableOnly: true }, "popularity").slice(0, 5);
-  const trending = products.filter((p) => p.isTrending).slice(0, 5);
-  const bestSellers = products.filter((p) => p.isBestSeller).slice(0, 5);
-  const festival = listProducts({ occasion: "diwali" }, "popularity").slice(0, 5);
-  const readyBoxLike = listProducts({ category: "hampers" }, "popularity").slice(0, 5);
+  const all = useProducts();
+  const trendingQ = useProducts("trending");
+  const bestQ = useProducts("best_seller");
+  const featuredQ = useProducts("featured");
+
+  const products = all.data ?? [];
+  const trending = trendingQ.data ?? [];
+  const bestSellers = bestQ.data ?? [];
+  const featured = featuredQ.data ?? [];
+
 
   return (
     <>
