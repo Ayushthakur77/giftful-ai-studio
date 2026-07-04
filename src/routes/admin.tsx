@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/admin")({
+  ssr: false,
   beforeLoad: ({ context, location }) => {
     if (!context.user) {
       throw redirect({ to: "/auth/sign-in", search: { redirect: location.href } });

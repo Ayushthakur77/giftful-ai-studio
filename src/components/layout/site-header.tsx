@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { signOutFn } from "@/lib/auth.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { listNotificationsFn, markAllNotificationsReadFn, unreadNotificationsCountFn } from "@/lib/notifications.functions";
 import { categories as navCategories } from "@/lib/catalog";
 import { useCart, useWishlist } from "@/lib/store";
@@ -42,8 +42,9 @@ export function SiteHeader() {
   const unreadCount = unread?.count ?? 0;
 
   async function handleSignOut() {
-    await signOutFn({});
+    await qc.cancelQueries();
     qc.clear();
+    await supabase.auth.signOut();
     await router.invalidate();
     router.navigate({ to: "/" });
   }

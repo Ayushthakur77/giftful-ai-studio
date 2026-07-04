@@ -2,11 +2,11 @@ import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tansta
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { signUpFn } from "@/lib/auth.functions";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { GoogleSignInButton } from "@/components/auth/google-sign-in-button";
 
 export const Route = createFileRoute("/auth/sign-up")({
   beforeLoad: ({ context }) => {
@@ -23,19 +23,53 @@ function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const signUp = useMutation({
-    mutationFn: (data: { name: string; email: string; password: string }) => signUpFn({ data }),
-    onSuccess: async (result) => {
-      if (!result.ok) return setError(result.error);
+    mutationFn: async (data: { name: string; email: string; password: string }) => {
+      const { data: res, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/account`,
+          data: { full_name: data.name },
+        },
+      });
+      if (error) throw error;
+      return res;
+    },
+    onSuccess: async (res) => {
+      if (res.session) {
+        await router.invalidate();
+        navigate({ to: "/account" });
+      } else {
+        setInfo("Account created. Check your email to confirm your address.");
+      }
+    },
+    onError: (e: unknown) => setError(e instanceof Error ? e.message : "Sign-up failed"),
+  });
+
+  async function handleGoogle() {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        setError(result.error instanceof Error ? result.error.message : "Google sign-up failed");
+        setGoogleLoading(false);
+        return;
+      }
+      if (result.redirected) return;
       await router.invalidate();
       navigate({ to: "/account" });
-    },
-    onError: (e: unknown) => {
-      const msg = e instanceof Error ? e.message : "Something went wrong.";
-      setError(msg);
-    },
-  });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Google sign-up failed");
+      setGoogleLoading(false);
+    }
+  }
 
   return (
     <div className="container-page flex items-center justify-center py-10 md:py-16">
@@ -43,7 +77,17 @@ function SignUpPage() {
         <h1 className="font-display text-2xl font-bold">Create your account</h1>
         <p className="mt-1 text-sm text-muted-foreground">Start sending joy across India.</p>
         <div className="mt-6">
-          <GoogleSignInButton redirectAfter="/account" label="Sign up with Google" />
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleLoading}
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-60"
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+              <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.24 1.3-1.72 3.8-5.5 3.8-3.31 0-6-2.74-6-6.1s2.69-6.1 6-6.1c1.88 0 3.14.8 3.86 1.48l2.63-2.53C16.8 3.06 14.63 2 12 2 6.98 2 2.9 6.03 2.9 11s4.08 9 9.1 9c5.25 0 8.72-3.69 8.72-8.89 0-.6-.06-1.05-.15-1.51H12z" />
+            </svg>
+            <span>{googleLoading ? "Redirecting…" : "Sign up with Google"}</span>
+          </button>
         </div>
         <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-muted-foreground">
           <span className="h-px flex-1 bg-border" />
@@ -55,6 +99,7 @@ function SignUpPage() {
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
+            setInfo(null);
             signUp.mutate({ name, email, password });
           }}
         >
@@ -76,12 +121,18 @@ function SignUpPage() {
               {error}
             </p>
           )}
+          {info && (
+            <p role="status" className="rounded-md border border-primary/40 bg-primary/5 px-3 py-2 text-sm text-primary">
+              {info}
+            </p>
+          )}
           <Button type="submit" className="h-11 w-full" disabled={signUp.isPending}>
             {signUp.isPending ? "Creating…" : "Create account"}
           </Button>
         </form>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Already have an account? <Link to="/auth/sign-in" className="text-primary hover:underline">Sign in</Link>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/auth/sign-in" className="text-primary hover:underline">Sign in</Link>
         </p>
       </div>
     </div>
