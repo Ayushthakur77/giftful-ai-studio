@@ -22,11 +22,23 @@ export interface RouterAppContext {
   user: LoadedSessionUser;
 }
 
+function BoundaryShell({ children }: { children: ReactNode }) {
+  const { queryClient } = Route.useRouteContext();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="flex min-h-dvh flex-col bg-background text-foreground">
+        <SiteHeader />
+        <main id="main-content" className="flex-1">{children}</main>
+        <SiteFooter />
+      </div>
+    </QueryClientProvider>
+  );
+}
+
 function NotFoundComponent() {
   return (
-    <>
-      <SiteHeader />
-      <main id="main-content" className="container-page flex min-h-[60vh] items-center justify-center px-4 py-16">
+    <BoundaryShell>
+      <div className="container-page flex min-h-[60vh] items-center justify-center px-4 py-16">
         <div className="max-w-md text-center">
           <h1 className="font-display text-6xl font-bold text-foreground">404</h1>
           <h2 className="mt-4 font-display text-xl font-semibold text-foreground">Page not found</h2>
@@ -42,9 +54,8 @@ function NotFoundComponent() {
             </Link>
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </>
+      </div>
+    </BoundaryShell>
   );
 }
 
@@ -56,9 +67,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <>
-      <SiteHeader />
-      <main id="main-content" className="container-page flex min-h-[60vh] items-center justify-center px-4 py-16">
+    <BoundaryShell>
+      <div className="container-page flex min-h-[60vh] items-center justify-center px-4 py-16">
         <div className="max-w-md text-center">
           <h1 className="font-display text-xl font-semibold tracking-tight text-foreground">
             This page didn't load
@@ -84,9 +94,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             </a>
           </div>
         </div>
-      </main>
-      <SiteFooter />
-    </>
+      </div>
+    </BoundaryShell>
   );
 }
 
