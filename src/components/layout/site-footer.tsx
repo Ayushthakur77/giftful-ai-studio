@@ -68,7 +68,7 @@ export function SiteFooter() {
               <ul className="mt-3 space-y-2">
                 {col.links.map((l) => (
                   <li key={l.to}>
-                    <Link to={l.to} className="text-sm text-muted-foreground hover:text-foreground">
+                    <Link to={l.to as any} className="text-sm text-muted-foreground hover:text-foreground">
                       {l.label}
                     </Link>
                   </li>

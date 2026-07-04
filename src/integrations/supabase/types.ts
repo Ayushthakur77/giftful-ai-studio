@@ -65,6 +65,105 @@ export type Database = {
         }
         Relationships: []
       }
+      coupon_redemptions: {
+        Row: {
+          coupon_id: string
+          created_at: string
+          discount_paise: number
+          id: string
+          order_id: string | null
+          user_id: string
+        }
+        Insert: {
+          coupon_id: string
+          created_at?: string
+          discount_paise?: number
+          id?: string
+          order_id?: string | null
+          user_id: string
+        }
+        Update: {
+          coupon_id?: string
+          created_at?: string
+          discount_paise?: number
+          id?: string
+          order_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          first_order_only: boolean
+          id: string
+          max_discount_paise: number | null
+          min_order_paise: number
+          per_user_limit: number
+          total_usage_limit: number
+          updated_at: string
+          usage_count: number
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value?: number
+          first_order_only?: boolean
+          id?: string
+          max_discount_paise?: number | null
+          min_order_paise?: number
+          per_user_limit?: number
+          total_usage_limit?: number
+          updated_at?: string
+          usage_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          first_order_only?: boolean
+          id?: string
+          max_discount_paise?: number | null
+          min_order_paise?: number
+          per_user_limit?: number
+          total_usage_limit?: number
+          updated_at?: string
+          usage_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           billing_address: Json
@@ -123,6 +222,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -216,6 +351,7 @@ export type Database = {
         Row: {
           contact: Json
           coupon_code: string | null
+          coupon_discount_paise: number
           created_at: string
           discount_paise: number
           estimated_delivery_at: string | null
@@ -237,6 +373,7 @@ export type Database = {
         Insert: {
           contact: Json
           coupon_code?: string | null
+          coupon_discount_paise?: number
           created_at?: string
           discount_paise?: number
           estimated_delivery_at?: string | null
@@ -258,6 +395,7 @@ export type Database = {
         Update: {
           contact?: Json
           coupon_code?: string | null
+          coupon_discount_paise?: number
           created_at?: string
           discount_paise?: number
           estimated_delivery_at?: string | null
@@ -277,6 +415,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_paise: number
+          created_at: string
+          currency: string
+          error_code: string | null
+          error_description: string | null
+          id: string
+          method: string | null
+          order_id: string
+          provider: string
+          provider_order_id: string | null
+          provider_payment_id: string | null
+          provider_signature: string | null
+          raw_response: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paise: number
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          method?: string | null
+          order_id: string
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          provider_signature?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paise?: number
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          error_description?: string | null
+          id?: string
+          method?: string | null
+          order_id?: string
+          provider?: string
+          provider_order_id?: string | null
+          provider_payment_id?: string | null
+          provider_signature?: string | null
+          raw_response?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -337,6 +540,18 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_staff: { Args: { _uid: string }; Returns: boolean }
+      validate_coupon: {
+        Args: { _code: string; _subtotal_paise: number; _user_id: string }
+        Returns: {
+          coupon_id: string
+          discount_type: string
+          discount_value: number
+          error: string
+          max_discount_paise: number
+          valid: boolean
+        }[]
       }
     }
     Enums: {

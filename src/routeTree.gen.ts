@@ -51,6 +51,7 @@ import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
 import { Route as PSlugCustomizeRouteImport } from './routes/p.$slug.customize'
 import { Route as CCategorySubcategoryRouteImport } from './routes/c.$category.$subcategory'
+import { Route as ApiPublicRazorpayWebhookRouteImport } from './routes/api/public/razorpay-webhook'
 import { Route as AccountOrdersIdRouteImport } from './routes/account.orders.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -263,6 +264,12 @@ const CCategorySubcategoryRoute = CCategorySubcategoryRouteImport.update({
   path: '/$subcategory',
   getParentRoute: () => CCategoryRoute,
 } as any)
+const ApiPublicRazorpayWebhookRoute =
+  ApiPublicRazorpayWebhookRouteImport.update({
+    id: '/api/public/razorpay-webhook',
+    path: '/api/public/razorpay-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AccountOrdersIdRoute = AccountOrdersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -311,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/p/$slug': typeof PSlugRouteWithChildren
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
@@ -355,6 +363,7 @@ export interface FileRoutesByTo {
   '/p/$slug': typeof PSlugRouteWithChildren
   '/account': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
@@ -401,6 +410,7 @@ export interface FileRoutesById {
   '/p/$slug': typeof PSlugRouteWithChildren
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
+  '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
   '/c/$category/$subcategory': typeof CCategorySubcategoryRoute
   '/p/$slug/customize': typeof PSlugCustomizeRoute
 }
@@ -448,6 +458,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/account/'
     | '/account/orders/$id'
+    | '/api/public/razorpay-webhook'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   fileRoutesByTo: FileRoutesByTo
@@ -492,6 +503,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/account'
     | '/account/orders/$id'
+    | '/api/public/razorpay-webhook'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   id:
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/account/'
     | '/account/orders/$id'
+    | '/api/public/razorpay-webhook'
     | '/c/$category/$subcategory'
     | '/p/$slug/customize'
   fileRoutesById: FileRoutesById
@@ -566,6 +579,7 @@ export interface RootRouteChildren {
   CCategoryRoute: typeof CCategoryRouteWithChildren
   OOccasionRoute: typeof OOccasionRoute
   PSlugRoute: typeof PSlugRouteWithChildren
+  ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -864,6 +878,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CCategorySubcategoryRouteImport
       parentRoute: typeof CCategoryRoute
     }
+    '/api/public/razorpay-webhook': {
+      id: '/api/public/razorpay-webhook'
+      path: '/api/public/razorpay-webhook'
+      fullPath: '/api/public/razorpay-webhook'
+      preLoaderRoute: typeof ApiPublicRazorpayWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/account/orders/$id': {
       id: '/account/orders/$id'
       path: '/$id'
@@ -982,6 +1003,7 @@ const rootRouteChildren: RootRouteChildren = {
   CCategoryRoute: CCategoryRouteWithChildren,
   OOccasionRoute: OOccasionRoute,
   PSlugRoute: PSlugRouteWithChildren,
+  ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

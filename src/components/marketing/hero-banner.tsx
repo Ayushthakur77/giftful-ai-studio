@@ -19,7 +19,7 @@ export function HeroBanner() {
           </p>
           <div className="mt-2 flex flex-wrap gap-3">
             <Button asChild size="lg" className="h-11">
-              <Link to="/c/personalized">Shop personalized</Link>
+              <Link to={"/c/personalized" as any}>Shop personalized</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="h-11">
               <Link to="/gift-box">Build a gift box</Link>

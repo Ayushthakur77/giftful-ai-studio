@@ -52,7 +52,7 @@ export function ShopBrowser({
   lockCategory?: CategorySlug;
   lockOccasion?: OccasionSlug;
 }) {
-  const navigate = useNavigate({ from: routeFrom }) as unknown as (opts: { search: any }) => void;
+  const navigate = useNavigate({ from: routeFrom as any }) as unknown as (opts: { search: any }) => void;
 
   const filters = {
     q: search.q,

@@ -3,7 +3,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  MapPin, Plus, ShoppingBag, Truck, CheckCircle2, Wallet, ChevronRight, Info, LocateFixed, Loader2,
+  MapPin, Plus, ShoppingBag, Truck, CheckCircle2, Wallet, ChevronRight, Info, LocateFixed, Loader2, Tag, X,
 } from "lucide-react";
 
 import { useCart } from "@/lib/store";
@@ -12,6 +12,9 @@ import { computeCart, type CartTotals } from "@/lib/pricing";
 import { formatINR } from "@/lib/catalog";
 import { listAddressesFn, createAddressFn, type Address } from "@/lib/address.functions";
 import { placeCodOrderFn } from "@/lib/checkout.functions";
+import { validateCouponFn, type CouponPreview } from "@/lib/coupons.functions";
+import { initiateRazorpayCheckoutFn, verifyRazorpayPaymentFn } from "@/lib/payments.functions";
+import { openRazorpayCheckout } from "@/lib/razorpay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,12 +44,10 @@ function CheckoutPage() {
   const hydrated = useCart((s) => s.hydrated);
   const clearCart = useCart((s) => s.clear);
 
-  // Empty cart guard
   useEffect(() => {
     if (hydrated && lines.length === 0) navigate({ to: "/cart" });
   }, [hydrated, lines.length, navigate]);
 
-  // Server-authoritative totals
   const clientTotals = useMemo(() => computeCart(lines), [lines]);
   const [serverTotals, setServerTotals] = useState<CartTotals | null>(null);
   useEffect(() => {
@@ -57,9 +58,8 @@ function CheckoutPage() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [hydrated, JSON.stringify(lines)]);
-  const totals = serverTotals ?? clientTotals;
+  const baseTotals = serverTotals ?? clientTotals;
 
-  // Addresses
   const { data: addresses = [] } = useQuery({ queryKey: ["addresses"], queryFn: () => listAddressesFn() });
   const [selectedId, setSelectedId] = useState<string | null>(null);
   useEffect(() => {
@@ -68,31 +68,101 @@ function CheckoutPage() {
     }
   }, [addresses, selectedId]);
 
-  // Payment method — MVP: COD only, Razorpay coming
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "razorpay">("razorpay");
   const [notes, setNotes] = useState("");
 
-  const place = useMutation({
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [applied, setApplied] = useState<CouponPreview | null>(null);
+  const applyCoupon = useMutation({
+    mutationFn: () => validateCouponFn({ data: {
+      code: couponInput.trim(),
+      subtotalPaise: baseTotals.subtotalPaise,
+      shippingPaise: baseTotals.shippingPaise,
+    } }),
+    onSuccess: (r) => {
+      if (!r.ok) { setApplied(null); return toast.error(r.error ?? "Invalid coupon"); }
+      setApplied(r);
+      toast.success(`Coupon ${r.code} applied`);
+    },
+  });
+
+  // Compose display totals (client-side preview; server re-validates)
+  const couponDiscountPaise = applied?.ok ? (applied.discountPaise ?? 0) : 0;
+  const shippingPaise = applied?.shippingWaived ? 0 : baseTotals.shippingPaise;
+  const discountedSubtotal = Math.max(0, baseTotals.subtotalPaise - couponDiscountPaise);
+  const taxPaise = Math.round(discountedSubtotal * 0.18);
+  const grandTotalPaise = discountedSubtotal + taxPaise + shippingPaise;
+  const totals = { ...baseTotals, shippingPaise, taxPaise, grandTotalPaise };
+
+  const placeCod = useMutation({
     mutationFn: () => placeCodOrderFn({ data: {
-      addressId: selectedId!,
-      lines,
+      addressId: selectedId!, lines,
+      couponCode: applied?.ok ? applied.code : undefined,
       notes: notes.trim() || undefined,
     } }),
     onSuccess: (res) => {
       if (!res.ok) return toast.error(res.error);
       clearCart();
       qc.invalidateQueries({ queryKey: ["my-orders"] });
+      qc.invalidateQueries({ queryKey: ["notifications"] });
+      qc.invalidateQueries({ queryKey: ["notifications-count"] });
       toast.success(`Order ${res.orderNumber} placed!`);
       navigate({ to: "/account/orders/$id", params: { id: res.orderId } });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to place order"),
   });
 
+  const [rzpLoading, setRzpLoading] = useState(false);
+  async function payWithRazorpay() {
+    if (!selectedId) return;
+    setRzpLoading(true);
+    try {
+      const init = await initiateRazorpayCheckoutFn({ data: {
+        addressId: selectedId, lines,
+        couponCode: applied?.ok ? applied.code : undefined,
+        notes: notes.trim() || undefined,
+      } });
+      if (!init.ok) { toast.error(init.error); return; }
+      await openRazorpayCheckout({
+        keyId: init.keyId, orderId: init.rzpOrderId,
+        amountPaise: init.amountPaise, name: "Giftty",
+        description: `Order ${init.orderNumber}`,
+        prefill: init.prefill,
+        onSuccess: async (payload) => {
+          const v = await verifyRazorpayPaymentFn({ data: {
+            orderId: init.orderId, ...payload,
+          } });
+          if (!v.ok) return toast.error(v.error);
+          clearCart();
+          qc.invalidateQueries({ queryKey: ["my-orders"] });
+          qc.invalidateQueries({ queryKey: ["notifications"] });
+          qc.invalidateQueries({ queryKey: ["notifications-count"] });
+          toast.success(`Payment successful · ${v.orderNumber}`);
+          navigate({ to: "/account/orders/$id", params: { id: v.orderId } });
+        },
+        onDismiss: () => toast.info("Payment cancelled. Your order is on hold."),
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to start payment");
+    } finally {
+      setRzpLoading(false);
+    }
+  }
+
+  const place = { isPending: placeCod.isPending || rzpLoading };
+  const handlePlace = () => {
+    if (paymentMethod === "cod") placeCod.mutate();
+    else payWithRazorpay();
+  };
+
   if (!hydrated) {
     return <div className="container-page py-12"><p className="text-sm text-muted-foreground">Loading checkout…</p></div>;
   }
 
-  const canPlace = !!selectedId && totals.errors.length === 0 && lines.length > 0 && !place.isPending;
+  const canPlace = !!selectedId && baseTotals.errors.length === 0 && lines.length > 0 && !place.isPending;
+
+
 
   return (
     <div className="container-page py-6 md:py-10">
@@ -180,6 +250,17 @@ function CheckoutPage() {
             <div className="mt-4 space-y-2">
               <label className={cn(
                 "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition",
+                paymentMethod === "razorpay" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
+              )}>
+                <input type="radio" className="mt-1 accent-primary"
+                  checked={paymentMethod === "razorpay"} onChange={() => setPaymentMethod("razorpay")} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">Razorpay <Badge className="ml-1">Recommended</Badge></p>
+                  <p className="text-xs text-muted-foreground">UPI, cards, net banking & wallets — instant.</p>
+                </div>
+              </label>
+              <label className={cn(
+                "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition",
                 paymentMethod === "cod" ? "border-primary bg-primary/5" : "border-border hover:bg-muted/40",
               )}>
                 <input type="radio" className="mt-1 accent-primary"
@@ -189,16 +270,8 @@ function CheckoutPage() {
                   <p className="text-xs text-muted-foreground">Pay in cash when your order arrives.</p>
                 </div>
               </label>
-              <label className={cn(
-                "flex cursor-not-allowed items-start gap-3 rounded-md border border-border p-3 opacity-60",
-              )}>
-                <input type="radio" disabled className="mt-1 accent-primary" checked={false} readOnly />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">Razorpay <Badge variant="secondary" className="ml-1">Coming soon</Badge></p>
-                  <p className="text-xs text-muted-foreground">UPI, cards, net banking & wallets.</p>
-                </div>
-              </label>
             </div>
+
 
             <div className="mt-4">
               <Label htmlFor="notes">Order notes (optional)</Label>
@@ -231,6 +304,9 @@ function CheckoutPage() {
 
           <dl className="grid gap-2 text-sm price-num">
             <Row label="Subtotal" value={formatINR(totals.subtotalPaise)} />
+            {couponDiscountPaise > 0 && (
+              <Row label={`Coupon (${applied?.code})`} value={`- ${formatINR(couponDiscountPaise)}`} />
+            )}
             <Row label="GST (18%)" value={formatINR(totals.taxPaise)} />
             <Row
               label="Shipping"
@@ -242,6 +318,35 @@ function CheckoutPage() {
               }
             />
           </dl>
+
+          {/* Coupon input */}
+          <div className="mt-4 rounded-md border border-dashed border-border p-3">
+            {applied?.ok ? (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Tag className="size-4 text-primary" />
+                  <div>
+                    <p className="font-semibold">{applied.code} applied</p>
+                    <p className="text-xs text-muted-foreground">{applied.description}</p>
+                  </div>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => { setApplied(null); setCouponInput(""); }}>
+                  <X className="size-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input placeholder="Have a coupon? e.g. WELCOME100"
+                       value={couponInput} className="h-9"
+                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())} />
+                <Button size="sm" variant="secondary" disabled={!couponInput || applyCoupon.isPending}
+                        onClick={() => applyCoupon.mutate()}>
+                  {applyCoupon.isPending ? "…" : "Apply"}
+                </Button>
+              </div>
+            )}
+          </div>
+
 
           <Separator className="my-4" />
 
@@ -263,9 +368,9 @@ function CheckoutPage() {
             size="lg"
             className="mt-4 h-11 w-full"
             disabled={!canPlace}
-            onClick={() => place.mutate()}
+            onClick={handlePlace}
           >
-            {place.isPending ? "Placing order…" : (
+            {place.isPending ? "Processing…" : (
               <>
                 <CheckCircle2 className="mr-2 size-4" />
                 Place order · {formatINR(totals.grandTotalPaise)}
