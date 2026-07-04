@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { signOutFn } from "@/lib/auth.functions";
 import { categories as navCategories } from "@/lib/catalog";
+import { useCart, useWishlist } from "@/lib/store";
+
 
 
 const primaryNav = [
