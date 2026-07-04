@@ -256,9 +256,9 @@ export type CartTotals = {
   free_shipping_threshold_paise: number;
 };
 
-export const FREE_SHIPPING_THRESHOLD_PAISE = 49900;
-export const FLAT_SHIPPING_PAISE = 4900;
-export const TAX_PCT = 5; // GST placeholder for Phase 5; real GST logic lands in Phase 6
+export const FREE_SHIPPING_THRESHOLD_PAISE = 99900; // ₹999
+export const FLAT_SHIPPING_PAISE = 9900;            // ₹99
+export const TAX_PCT = 18; // GST 18% (Phase 8; admin-configurable later)
 
 export function computeCart(lines: CartLine[]): CartTotals {
   const priced = lines.map(priceLine);
