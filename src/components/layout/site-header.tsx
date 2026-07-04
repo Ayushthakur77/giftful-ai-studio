@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { signOutFn } from "@/lib/auth.functions";
-import { categories } from "@/lib/mock-data";
+import { categories as navCategories } from "@/lib/catalog";
+import { useCart, useWishlist } from "@/lib/store";
+
+
 
 const primaryNav = [
   { to: "/c/personalized", label: "Personalized", icon: Sparkles },
@@ -13,14 +16,19 @@ const primaryNav = [
   { to: "/c/cakes", label: "Cakes" },
   { to: "/c/chocolates", label: "Chocolates" },
   { to: "/c/hampers", label: "Hampers" },
-  { to: "/c/corporate", label: "Corporate" },
+  { to: "/gift-boxes", label: "Gift Boxes", icon: Gift },
   { to: "/gift-box", label: "Build a Box", icon: Gift },
+  { to: "/c/corporate", label: "Corporate" },
   { to: "/ai-finder", label: "AI Finder", icon: Sparkles },
 ] as const;
+
 
 export function SiteHeader() {
   const { user } = useRouteContext({ from: "__root__" });
   const router = useRouter();
+  const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.quantity, 0));
+  const wishlistCount = useWishlist((s) => s.slugs.length);
+
   async function handleSignOut() {
     await signOutFn({});
     await router.invalidate();
@@ -135,11 +143,15 @@ export function SiteHeader() {
               <Search className="size-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Wishlist" className="hidden md:inline-flex">
-            <Link to="/account/wishlist">
+          <Button variant="ghost" size="icon" asChild aria-label={`Wishlist (${wishlistCount})`} className="hidden md:inline-flex">
+            <Link to="/account/wishlist" className="relative">
               <Heart className="size-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{wishlistCount}</span>
+              )}
             </Link>
           </Button>
+
           <Button variant="ghost" size="icon" asChild aria-label="Orders" className="hidden md:inline-flex">
             <Link to="/account/orders">
               <Package className="size-5" />
@@ -179,12 +191,16 @@ export function SiteHeader() {
               <Link to="/auth/sign-in">Sign in</Link>
             </Button>
           )}
-          <Button variant="ghost" size="icon" asChild aria-label="Cart">
+          <Button variant="ghost" size="icon" asChild aria-label={`Cart (${cartCount})`}>
             <Link to="/cart" className="relative">
               <ShoppingBag className="size-5" />
-              <span className="sr-only">Cart</span>
+              {cartCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{cartCount}</span>
+              )}
+              <span className="sr-only">Cart ({cartCount})</span>
             </Link>
           </Button>
+
         </div>
       </div>
 
@@ -211,7 +227,7 @@ export function SiteHeader() {
       {/* Mobile category chips */}
       <div className="border-t border-border bg-background md:hidden">
         <div className="flex gap-2 overflow-x-auto px-4 py-2 hide-scrollbar">
-          {categories.map((c) => (
+          {navCategories.map((c) => (
             <Link
               key={c.slug}
               to="/c/$category"

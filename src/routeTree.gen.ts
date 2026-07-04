@@ -16,6 +16,7 @@ import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as GiftBoxesRouteImport } from './routes/gift-boxes'
 import { Route as GiftBoxRouteImport } from './routes/gift-box'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -85,6 +86,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GiftBoxesRoute = GiftBoxesRouteImport.update({
+  id: '/gift-boxes',
+  path: '/gift-boxes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GiftBoxRoute = GiftBoxRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/gift-box': typeof GiftBoxRoute
+  '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -317,6 +324,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/gift-box': typeof GiftBoxRoute
+  '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -362,6 +370,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/gift-box': typeof GiftBoxRoute
+  '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -408,6 +417,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/gift-box'
+    | '/gift-boxes'
     | '/help'
     | '/privacy'
     | '/reset-password'
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/gift-box'
+    | '/gift-boxes'
     | '/help'
     | '/privacy'
     | '/reset-password'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/faq'
     | '/gift-box'
+    | '/gift-boxes'
     | '/help'
     | '/privacy'
     | '/reset-password'
@@ -540,6 +552,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
   GiftBoxRoute: typeof GiftBoxRoute
+  GiftBoxesRoute: typeof GiftBoxesRoute
   HelpRoute: typeof HelpRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -604,6 +617,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gift-boxes': {
+      id: '/gift-boxes'
+      path: '/gift-boxes'
+      fullPath: '/gift-boxes'
+      preLoaderRoute: typeof GiftBoxesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gift-box': {
@@ -948,6 +968,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
   GiftBoxRoute: GiftBoxRoute,
+  GiftBoxesRoute: GiftBoxesRoute,
   HelpRoute: HelpRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -965,13 +986,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
