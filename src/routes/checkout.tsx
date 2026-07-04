@@ -3,7 +3,7 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  MapPin, Plus, ShoppingBag, Truck, CheckCircle2, Wallet, ChevronRight, Info,
+  MapPin, Plus, ShoppingBag, Truck, CheckCircle2, Wallet, ChevronRight, Info, LocateFixed, Loader2,
 } from "lucide-react";
 
 import { useCart } from "@/lib/store";
