@@ -75,13 +75,21 @@ export function ShopBrowser({
   const view = search.view ?? "grid";
   const page = search.page ?? 1;
 
-  const results = useMemo(() => listProducts(filters, sort), [JSON.stringify(filters), sort]);
+  const productsQuery = useQuery({
+    queryKey: ["public-products", "browser", lockCategory ?? null],
+    queryFn: () => listPublicProductsFn({ data: { categorySlug: lockCategory, limit: 60 } }),
+    staleTime: 30_000,
+  });
+  const all = productsQuery.data ?? [];
+
+  const results = useMemo(() => applyFilters(all, filters, sort), [all, JSON.stringify(filters), sort]);
   const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
   const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   function update(patch: Partial<BrowserSearch>) {
     navigate({ search: (prev: BrowserSearch) => ({ ...prev, ...patch, page: 1 }) });
   }
+
 
   const filterPanel = (
     <FilterPanel
