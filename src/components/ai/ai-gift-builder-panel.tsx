@@ -48,7 +48,11 @@ export function AiGiftBuilderPanel({
       if (!res.ok) { toast.error(res.error); return; }
       onApply(res.draft);
       res.draft.notes.forEach((n) => toast.info(n));
-      toast.success("AI built your gift box — edit anything before adding to cart.");
+      if (res.draft.items.length === 0) {
+        toast.warning("AI couldn't find matching products for this box. Try widening the budget or preferences, or pick items manually.");
+      } else {
+        toast.success(`AI added ${res.draft.items.length} item${res.draft.items.length > 1 ? "s" : ""} — edit anything before checkout.`);
+      }
     } catch {
       toast.error("AI is unavailable right now.");
     } finally {

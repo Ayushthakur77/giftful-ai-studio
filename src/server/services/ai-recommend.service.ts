@@ -17,6 +17,7 @@ import {
   findProductBySlug,
   findEmptyBoxBySlug,
   findReadyBoxBySlug,
+  products as allProducts,
   ribbons,
   fillers,
   greetingCards,
@@ -245,6 +246,30 @@ function validateBuild(raw: RawBuildBox, input: BuildBoxInput): BuildBoxResult {
   const card = greetingCards.find((r) => r.slug === raw.cardSlug) ?? greetingCards[0];
 
   let total = box.pricePaise + productsCost + ribbon.pricePaise + filler.pricePaise + card.pricePaise;
+
+  // Fallback: if the AI's picks were all filtered out, greedily fill the box
+  // with the highest-rated compatible in-stock products so the user isn't
+  // left with an empty gift box.
+  if (items.length === 0) {
+    const budgetCap = input.budgetPaise ?? Number.POSITIVE_INFINITY;
+    const candidates = allProducts
+      .filter((p) => p.stock > 0 && p.isGiftBoxCompatible)
+      .filter((p) => !box.allowedCategories.length || box.allowedCategories.includes(p.category))
+      .filter((p) => usedWeight + p.weightGrams <= box.maxWeightGrams)
+      .filter((p) => total + p.pricePaise <= budgetCap)
+      .sort((a, b) => b.rating - a.rating || a.pricePaise - b.pricePaise);
+    for (const p of candidates) {
+      if (usedSlots >= box.capacity) break;
+      if (usedWeight + p.weightGrams > box.maxWeightGrams) continue;
+      if (total + p.pricePaise > budgetCap) continue;
+      items.push({ productSlug: p.slug, quantity: 1 });
+      usedSlots += 1;
+      usedWeight += p.weightGrams;
+      productsCost += p.pricePaise;
+      total += p.pricePaise;
+    }
+    if (items.length > 0) notes.push("AI's picks didn't fit this box — auto-filled with matching products.");
+  }
 
   // Enforce budget by trimming quantities from the last item, then removing items.
   if (input.budgetPaise && total > input.budgetPaise && items.length > 0) {
