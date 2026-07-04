@@ -104,16 +104,16 @@ function AdminAi() {
             <CardHeader><CardTitle>Recent AI Requests</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                {((logs ?? []) as Array<{ id: string; feature: string; status: string; created_at: string; error?: string }>).map((l) => (
-                  <div key={l.id} className="flex items-center justify-between border-b pb-2">
+                {(logs ?? []).map((l, i) => (
+                  <div key={i} className="flex items-center justify-between border-b pb-2">
                     <div>
-                      <div className="font-medium">{l.feature}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(l.created_at).toLocaleString()}</div>
+                      <div className="font-medium">{l.feature} <span className="text-xs text-muted-foreground">({l.model})</span></div>
+                      <div className="text-xs text-muted-foreground">{new Date(l.ts).toLocaleString()} · {l.latencyMs}ms{l.error ? ` · ${l.error}` : ""}</div>
                     </div>
-                    <div className={l.status === "ok" ? "text-green-600" : "text-destructive"}>{l.status}</div>
+                    <div className={l.ok ? "text-green-600" : "text-destructive"}>{l.ok ? "ok" : "fail"}</div>
                   </div>
                 ))}
-                {(!logs || (logs as unknown[]).length === 0) && <p className="text-muted-foreground">No logs yet.</p>}
+                {(!logs || logs.length === 0) && <p className="text-muted-foreground">No logs yet.</p>}
               </div>
             </CardContent>
           </Card>
