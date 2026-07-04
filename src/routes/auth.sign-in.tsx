@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { fallback, zodValidator } from "@tanstack/zod-adapter";
@@ -13,23 +13,18 @@ const searchSchema = z.object({
   redirect: fallback(z.string(), "/account").default("/account"),
 });
 
+function safeTarget(t: string) {
+  return t.startsWith("/") && !t.startsWith("//") ? t : "/account";
+}
+
 export const Route = createFileRoute("/auth/sign-in")({
   validateSearch: zodValidator(searchSchema),
   beforeLoad: ({ context, search }) => {
-    if (context.user) {
-      throw redirectToSafe(search.redirect);
-    }
+    if (context.user) throw redirect({ href: safeTarget(search.redirect) });
   },
   head: () => ({ meta: [{ title: "Sign in — Giftty" }, { name: "robots", content: "noindex" }] }),
   component: SignInPage,
 });
-
-function redirectToSafe(target: string) {
-  const safe = target.startsWith("/") && !target.startsWith("//") ? target : "/account";
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { redirect } = require("@tanstack/react-router") as typeof import("@tanstack/react-router");
-  return redirect({ href: safe });
-}
 
 function SignInPage() {
   const search = Route.useSearch();
@@ -47,8 +42,7 @@ function SignInPage() {
         return;
       }
       await router.invalidate();
-      const target = search.redirect.startsWith("/") && !search.redirect.startsWith("//") ? search.redirect : "/account";
-      navigate({ href: target });
+      navigate({ href: safeTarget(search.redirect) });
     },
     onError: () => setError("Something went wrong. Please try again."),
   });
