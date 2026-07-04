@@ -145,11 +145,40 @@ export function SiteHeader() {
               <Package className="size-5" />
             </Link>
           </Button>
-          <Button variant="ghost" size="icon" asChild aria-label="Account" className="hidden md:inline-flex">
-            <Link to="/account">
-              <User className="size-5" />
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Account menu" className="hidden md:inline-flex">
+                  <User className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="truncate">{user.name ?? user.email}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link to="/account">My account</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/orders">Orders</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/account/wishlist">Wishlist</Link></DropdownMenuItem>
+                {user.isSuperAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/dashboard" className="text-primary">
+                        <Shield className="mr-2 size-4" />Admin panel
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={handleSignOut}>
+                  <LogOut className="mr-2 size-4" />Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" asChild className="hidden h-9 px-3 text-sm font-medium md:inline-flex">
+              <Link to="/auth/sign-in">Sign in</Link>
+            </Button>
+          )}
           <Button variant="ghost" size="icon" asChild aria-label="Cart">
             <Link to="/cart" className="relative">
               <ShoppingBag className="size-5" />
