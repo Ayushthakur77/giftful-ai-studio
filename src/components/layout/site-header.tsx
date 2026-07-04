@@ -24,6 +24,9 @@ const primaryNav = [
 export function SiteHeader() {
   const { user } = useRouteContext({ from: "__root__" });
   const router = useRouter();
+  const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.quantity, 0));
+  const wishlistCount = useWishlist((s) => s.slugs.length);
+
   async function handleSignOut() {
     await signOutFn({});
     await router.invalidate();
