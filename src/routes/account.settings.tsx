@@ -71,7 +71,7 @@ function SettingsPage() {
             ))}
           </ul>
         ) : (
-          <EmptyState icon={BellRing} title="You're all caught up" description="Order updates and account alerts will show here." className="border-none py-8" />
+          <div className="mt-3"><EmptyState icon={BellRing} title="You're all caught up" description="Order updates and account alerts will show here." /></div>
         )}
       </section>
 
