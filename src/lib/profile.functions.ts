@@ -1,27 +1,48 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const SESSION_COOKIE = "giftty_session";
+type ProfileRow = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
+};
 
-async function serverUtils() {
-  return await import("@tanstack/react-start/server");
+async function ensureProfile(supabase: any, userId: string) {
+  const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (data) return data as ProfileRow;
+  const { data: created } = await supabase.from("profiles").insert({ id: userId }).select("*").single();
+  return created as ProfileRow;
 }
 
-async function requireUserId(): Promise<string> {
-  const { getCookie } = await serverUtils();
-  const token = getCookie(SESSION_COOKIE);
-  const { authService } = await import("@/server/services/auth.service");
-  const me = await authService.me(token);
-  if (!me) throw new Response("Unauthorized", { status: 401 });
-  return me.id;
-}
+export const getProfileFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const row = await ensureProfile(context.supabase, context.userId);
+    const email = (context.claims as { email?: string })?.email ?? "";
 
-export const getProfileFn = createServerFn({ method: "GET" }).handler(async () => {
-  const userId = await requireUserId();
-  const { profileService } = await import("@/server/services/profile.service");
-  const [profile, stats] = await Promise.all([profileService.get(userId), profileService.stats(userId)]);
-  return { profile, stats };
-});
+    const [{ count: addressCount }] = await Promise.all([
+      context.supabase.from("addresses").select("id", { count: "exact", head: true }),
+    ]);
+
+    return {
+      profile: {
+        id: row.id,
+        email,
+        name: row.name,
+        phone: row.phone,
+        avatarUrl: row.avatar_url,
+        createdAt: row.created_at,
+      },
+      stats: {
+        addressCount: addressCount ?? 0,
+        wishlistCount: 0,
+        unreadNotifications: 0,
+      },
+    };
+  });
 
 const updateInput = z.object({
   name: z.string().trim().min(1).max(200),
@@ -30,41 +51,52 @@ const updateInput = z.object({
 });
 
 export const updateProfileFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => updateInput.parse(d))
-  .handler(async ({ data }) => {
-    const userId = await requireUserId();
-    const { profileService } = await import("@/server/services/profile.service");
+  .handler(async ({ data, context }) => {
     try {
-      await profileService.update(userId, data);
+      await ensureProfile(context.supabase, context.userId);
+      const { error } = await context.supabase
+        .from("profiles")
+        .update({
+          name: data.name,
+          phone: data.phone || null,
+          avatar_url: data.avatarUrl || null,
+        })
+        .eq("id", context.userId);
+      if (error) throw new Error(error.message);
       return { ok: true as const };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Update failed" };
     }
   });
 
-export const listSessionsFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { getCookie } = await serverUtils();
-  const token = getCookie(SESSION_COOKIE);
-  const userId = await requireUserId();
-  const { profileService } = await import("@/server/services/profile.service");
-  return profileService.listSessions(userId, token ?? null);
-});
+// Supabase manages sessions internally — we surface only the current device.
+export const listSessionsFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    return [{
+      id: "current",
+      userAgent: "This browser",
+      ip: null as string | null,
+      lastSeenAt: new Date().toISOString(),
+      isCurrent: true,
+    }];
+  });
 
-export const signOutOthersFn = createServerFn({ method: "POST" }).handler(async () => {
-  const { getCookie } = await serverUtils();
-  const token = getCookie(SESSION_COOKIE);
-  const userId = await requireUserId();
-  const { profileService } = await import("@/server/services/profile.service");
-  return profileService.signOutOthers(userId, token ?? null);
-});
+export const signOutOthersFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    // Placeholder — global sign-out will land alongside the security phase.
+    return { removed: 0 };
+  });
 
 export const deleteAccountFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ confirm: z.literal("DELETE") }).parse(d))
-  .handler(async () => {
-    const userId = await requireUserId();
-    const { profileService } = await import("@/server/services/profile.service");
-    const { deleteCookie } = await serverUtils();
-    await profileService.deleteAccount(userId);
-    deleteCookie(SESSION_COOKIE, { path: "/" });
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error(error.message);
     return { ok: true as const };
   });
