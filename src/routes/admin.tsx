@@ -3,7 +3,18 @@ import { LayoutDashboard, Package, FolderTree, ShoppingCart, Users, Tags, Layout
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import { redirect } from "@tanstack/react-router";
+
 export const Route = createFileRoute("/admin")({
+  beforeLoad: ({ context, location }) => {
+    if (!context.user) {
+      throw redirect({ to: "/auth/sign-in", search: { redirect: location.href } });
+    }
+    // Hide admin entirely from everyone except the Super Admin.
+    if (!context.user.isSuperAdmin) {
+      throw redirect({ to: "/" });
+    }
+  },
   head: () => ({ meta: [{ title: "Admin — Giftty" }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,
 });

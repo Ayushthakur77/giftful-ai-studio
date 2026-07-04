@@ -11,10 +11,16 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { loadSessionFn, type LoadedSessionUser } from "../lib/session.functions";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SkipLink } from "@/components/layout/skip-link";
 import { Toaster } from "@/components/ui/sonner";
+
+export interface RouterAppContext {
+  queryClient: QueryClient;
+  user: LoadedSessionUser;
+}
 
 function NotFoundComponent() {
   return (
@@ -84,7 +90,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  beforeLoad: async () => {
+    const user = await loadSessionFn();
+    return { user };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
