@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { signOutFn } from "@/lib/auth.functions";
-import { useCart, useWishlist } from "@/lib/store";
+import { categories as navCategories } from "@/lib/catalog";
 
 
 const primaryNav = [
@@ -212,7 +212,7 @@ export function SiteHeader() {
       {/* Mobile category chips */}
       <div className="border-t border-border bg-background md:hidden">
         <div className="flex gap-2 overflow-x-auto px-4 py-2 hide-scrollbar">
-          {categories.map((c) => (
+          {navCategories.map((c) => (
             <Link
               key={c.slug}
               to="/c/$category"
