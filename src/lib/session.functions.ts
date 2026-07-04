@@ -21,15 +21,18 @@ export async function loadSessionFn(): Promise<LoadedSessionUser> {
     const user = data.session?.user;
     if (!user) return null;
     const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-    const superAdminEmail = (import.meta.env.VITE_SUPER_ADMIN_EMAIL as string | undefined) ?? "";
-    const isSuperAdmin =
-      !!superAdminEmail && user.email?.toLowerCase() === superAdminEmail.toLowerCase();
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    const roles = (roleRows ?? []).map((r) => r.role) as ("super_admin" | "staff" | "customer")[];
+    const isSuperAdmin = roles.includes("super_admin");
     return {
       id: user.id,
       email: user.email ?? "",
       name: (meta.full_name as string) ?? (meta.name as string) ?? null,
       avatarUrl: (meta.avatar_url as string) ?? (meta.picture as string) ?? null,
-      roles: isSuperAdmin ? ["super_admin"] : ["customer"],
+      roles: roles.length ? roles : ["customer"],
       isSuperAdmin,
     };
   } catch (err) {
