@@ -10,8 +10,15 @@ export type LoadedSessionUser = {
 } | null;
 
 export const loadSessionFn = createServerFn({ method: "GET" }).handler(async (): Promise<LoadedSessionUser> => {
-  const { getCookie } = await import("@tanstack/react-start/server");
-  const token = getCookie("giftty_session");
-  const { authService } = await import("@/server/services/auth.service");
-  return authService.me(token);
+  try {
+    const { getCookie } = await import("@tanstack/react-start/server");
+    const token = getCookie("giftty_session");
+    if (!token) return null;
+    const { authService } = await import("@/server/services/auth.service");
+    return await authService.me(token);
+  } catch (err) {
+    // Never let a transient DB/cookie error take down the app shell.
+    console.error("loadSessionFn failed:", err);
+    return null;
+  }
 });
