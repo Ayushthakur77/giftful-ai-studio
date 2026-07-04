@@ -86,7 +86,7 @@ export const listSessionsFn = createServerFn({ method: "GET" })
 
 export const signOutOthersFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async (): Promise<{ removed: number }> => {
     // Placeholder — global sign-out will land alongside the security phase.
     return { removed: 0 };
   });

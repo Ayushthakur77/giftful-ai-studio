@@ -134,7 +134,7 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
       grand_total_paise: totals.grandTotalPaise,
       billing_address: shippingSnap,
       shipping_address: shippingSnap,
-      seller: COMPANY,
+      seller: JSON.parse(JSON.stringify(COMPANY)),
     });
 
     // 7. Status history
