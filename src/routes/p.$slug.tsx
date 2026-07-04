@@ -106,7 +106,7 @@ function ProductPage() {
           </div>
           {product.gallery.length > 1 && (
             <div className="mt-3 flex gap-2 overflow-x-auto">
-              {product.gallery.map((g, i) => (
+              {product.gallery.map((g: string, i: number) => (
                 <button
                   key={i}
                   aria-label={`View image ${i + 1}`}
@@ -179,7 +179,7 @@ function ProductPage() {
                 if (typeof navigator !== "undefined" && "share" in navigator) {
                   void navigator.share({ title: product.name, url: window.location.href });
                 } else if (typeof navigator !== "undefined") {
-                  void navigator.clipboard.writeText(window.location.href);
+                  void (navigator as Navigator).clipboard.writeText(window.location.href);
                   toast.success("Link copied");
                 }
               }}
@@ -209,7 +209,7 @@ function ProductPage() {
           </TabsContent>
           <TabsContent value="specs" className="pt-4">
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
-              {(product.specs ?? []).map((s) => (
+              {(product.specs ?? []).map((s: { label: string; value: string }) => (
                 <div key={s.label} className="flex justify-between border-b border-border py-2">
                   <dt className="font-medium text-muted-foreground">{s.label}</dt>
                   <dd className="text-foreground">{s.value}</dd>
@@ -231,7 +231,7 @@ function ProductPage() {
 
       {related.length > 0 && (
         <ProductRail title="You may also like" ctaLabel="See more" ctaTo="/search">
-          {related.slice(0, 5).map((p) => <ProductCard key={p.slug} product={p} />)}
+          {related.slice(0, 5).map((p: Product) => <ProductCard key={p.slug} product={p} />)}
         </ProductRail>
       )}
     </div>
