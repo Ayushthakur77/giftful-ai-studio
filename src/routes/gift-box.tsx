@@ -124,6 +124,13 @@ function GiftBoxWizard() {
       <h1 className="font-display text-2xl font-bold md:text-3xl">Build your gift box</h1>
       <p className="mt-1 text-sm text-muted-foreground">Step {step + 1} of {STEPS.length} · {STEPS[step]}</p>
 
+      <AiGiftBuilderPanel
+        defaultQuery={search.ai}
+        defaultBudget={search.budget}
+        onApply={applyAiDraft}
+      />
+
+
       <div className="mt-4">
         <Progress value={((step + 1) / STEPS.length) * 100} />
         <ol className="mt-3 hidden flex-wrap gap-2 md:flex">
@@ -203,7 +210,14 @@ function GiftBoxWizard() {
 
           {step === 5 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold">Write a gift note</h3>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Write a gift note</h3>
+                <AiGreetingButton
+                  defaultOccasion="birthday"
+                  maxChars={500}
+                  onApply={(msg) => setNote(msg)}
+                />
+              </div>
               <Textarea
                 rows={5}
                 maxLength={500}
@@ -213,6 +227,7 @@ function GiftBoxWizard() {
               />
               <p className="mt-1 text-xs text-muted-foreground">{note.length}/500</p>
             </div>
+
           )}
 
           {step === 6 && priced && (
