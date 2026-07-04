@@ -10,21 +10,18 @@ import { RatingPill } from "@/components/product/rating-pill";
 import { PriceBlock } from "@/components/product/price-block";
 import { ProductRail } from "@/components/product/product-rail";
 import { ProductCard } from "@/components/product/product-card";
-import {
-  findProductBySlug,
-  relatedProducts,
-  type Product,
-} from "@/lib/catalog";
+import type { Product } from "@/lib/catalog";
 import { useCart, useWishlist, pushRecentlyViewed } from "@/lib/store";
 import { PersonalizationForm, type PersonalizationValues } from "@/components/product/personalization-form";
 import { checkPincodeFn } from "@/lib/catalog.functions";
+import { getPublicProductBySlugFn } from "@/lib/public-catalog.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/p/$slug")({
-  loader: ({ params }) => {
-    const product = findProductBySlug(params.slug);
-    if (!product) throw notFound();
-    return { product, related: relatedProducts(params.slug, 8) };
+  loader: async ({ params }) => {
+    const result = await getPublicProductBySlugFn({ data: { slug: params.slug } });
+    if (!result) throw notFound();
+    return result;
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Product not found — Giftty" }, { name: "robots", content: "noindex" }] };
@@ -42,6 +39,12 @@ export const Route = createFileRoute("/p/$slug")({
   },
   component: ProductPage,
   notFoundComponent: NotFound,
+  errorComponent: ({ error }) => (
+    <div className="container-page py-16 text-center">
+      <h1 className="font-display text-2xl font-bold">Something went wrong</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+    </div>
+  ),
 });
 
 function NotFound() {
@@ -56,6 +59,7 @@ function NotFound() {
 
 function ProductPage() {
   const { product, related } = Route.useLoaderData();
+
   const [activeImage, setActiveImage] = useState(0);
   const [personalization, setPersonalization] = useState<PersonalizationValues>({});
   const [quantity, setQuantity] = useState(1);
