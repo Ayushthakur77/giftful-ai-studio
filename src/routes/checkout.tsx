@@ -346,6 +346,17 @@ function AddressQuickAdd({ onCreated }: { onCreated: (a: Address) => void }) {
       <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader><DialogTitle>Add delivery address</DialogTitle></DialogHeader>
         <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>
+          <UseMyLocationButton
+            onResolved={(loc) => setForm((f) => ({
+              ...f,
+              line1: f.line1 || loc.line1 || "",
+              line2: f.line2 || loc.line2 || "",
+              city: loc.city || f.city,
+              state: loc.state || f.state,
+              pincode: loc.pincode || f.pincode,
+              country: loc.country || f.country || "IN",
+            }))}
+          />
           <Field label="Full name" value={form.fullName} onChange={(v) => set("fullName", v)} required />
           <Field label="Phone" value={form.phone} onChange={(v) => set("phone", v)} required />
           <Field label="House / Flat / Building" value={form.line1} onChange={(v) => set("line1", v)} required />
