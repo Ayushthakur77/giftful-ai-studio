@@ -16,6 +16,8 @@ import { PersonalizationForm, type PersonalizationValues } from "@/components/pr
 import { checkPincodeFn } from "@/lib/catalog.functions";
 import { getPublicProductBySlugFn } from "@/lib/public-catalog.functions";
 import { getRecommendationsFn } from "@/lib/discovery.functions";
+import { incrementProductViewFn } from "@/lib/reviews.functions";
+import { ReviewsSection } from "@/components/product/reviews-section";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +30,20 @@ export const Route = createFileRoute("/p/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Product not found — Giftty" }, { name: "robots", content: "noindex" }] };
     const p = loaderData.product;
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.name,
+      description: p.shortDescription || p.description,
+      image: p.gallery,
+      sku: p.sku,
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: (p.pricePaise / 100).toFixed(2),
+        availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      },
+    };
     return {
       meta: [
         { title: `${p.name} — Giftty` },
@@ -36,6 +52,11 @@ export const Route = createFileRoute("/p/$slug")({
         { property: "og:description", content: p.shortDescription },
         { property: "og:image", content: p.image },
         { property: "og:type", content: "product" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: p.image },
+      ],
+      scripts: [
+        { type: "application/ld+json", children: JSON.stringify(jsonLd) },
       ],
     };
   },
@@ -70,7 +91,7 @@ function ProductPage() {
   const toggleWishlist = useWishlist((s) => s.toggle);
   const navigate = useNavigate();
 
-  useEffect(() => { pushRecentlyViewed(product.slug); }, [product.slug]);
+  useEffect(() => { pushRecentlyViewed(product.slug); incrementProductViewFn({ data: { slug: product.slug } }).catch(() => {}); }, [product.slug]);
 
   const hasPersonalization = Object.values(personalization).some((v) => v && v.trim().length > 0);
 
@@ -229,8 +250,8 @@ function ProductPage() {
               </div>
             </dl>
           </TabsContent>
-          <TabsContent value="reviews" className="pt-4 text-sm text-muted-foreground">
-            Verified customer reviews will appear here in Phase 6.
+          <TabsContent value="reviews" className="pt-4">
+            <ReviewsSection productSlug={product.slug} />
           </TabsContent>
         </Tabs>
       </div>
