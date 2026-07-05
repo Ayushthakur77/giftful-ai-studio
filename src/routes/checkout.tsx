@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import {
 
 import { useCart } from "@/lib/store";
 import { computeCartTotalsFn } from "@/lib/catalog.functions";
-import { computeCart, type CartTotals } from "@/lib/pricing";
+import { type CartTotals } from "@/lib/pricing";
 import { formatINR } from "@/lib/catalog";
 import { listAddressesFn, createAddressFn, type Address } from "@/lib/address.functions";
 import { placeCodOrderFn } from "@/lib/checkout.functions";
@@ -48,7 +48,7 @@ function CheckoutPage() {
     if (hydrated && lines.length === 0) navigate({ to: "/cart" });
   }, [hydrated, lines.length, navigate]);
 
-  const clientTotals = useMemo(() => computeCart(lines), [lines]);
+  // Totals are always server-authoritative — pricing needs live DB data.
   const [serverTotals, setServerTotals] = useState<CartTotals | null>(null);
   useEffect(() => {
     if (!hydrated || lines.length === 0) return;
@@ -58,7 +58,10 @@ function CheckoutPage() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [hydrated, JSON.stringify(lines)]);
-  const baseTotals = serverTotals ?? clientTotals;
+  const baseTotals: CartTotals = serverTotals ?? {
+    lines: [], subtotalPaise: 0, discountPaise: 0, shippingPaise: 0,
+    taxPaise: 0, grandTotalPaise: 0, errors: [], free_shipping_threshold_paise: 99900,
+  };
 
   const { data: addresses = [] } = useQuery({ queryKey: ["addresses"], queryFn: () => listAddressesFn() });
   const [selectedId, setSelectedId] = useState<string | null>(null);

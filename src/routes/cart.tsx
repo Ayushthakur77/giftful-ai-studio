@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useCart, useWishlist } from "@/lib/store";
 import { computeCartTotalsFn } from "@/lib/catalog.functions";
-import { computeCart, type CartTotals } from "@/lib/pricing";
-import { findProductBySlug, formatINR } from "@/lib/catalog";
+import { type CartTotals } from "@/lib/pricing";
+import { formatINR } from "@/lib/catalog";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Your cart — Giftty" }, { name: "robots", content: "noindex" }] }),
@@ -23,20 +23,20 @@ function CartPage() {
   const remove = useCart((s) => s.remove);
   const addWishlist = useWishlist((s) => s.add);
 
-  // Optimistic client-side totals; server-authoritative totals below.
-  const clientTotals = computeCart(lines);
-  const [serverTotals, setServerTotals] = useState<CartTotals | null>(null);
+  // Totals are always server-authoritative — pricing needs live DB data.
+  const [totals, setTotals] = useState<CartTotals | null>(null);
+  const [loadingTotals, setLoadingTotals] = useState(false);
 
   useEffect(() => {
-    if (!hydrated || lines.length === 0) { setServerTotals(null); return; }
+    if (!hydrated || lines.length === 0) { setTotals(null); return; }
     let cancelled = false;
+    setLoadingTotals(true);
     computeCartTotalsFn({ data: { lines } })
-      .then((t) => { if (!cancelled) setServerTotals(t as CartTotals); })
-      .catch(() => { /* fall back to clientTotals */ });
+      .then((t) => { if (!cancelled) setTotals(t as CartTotals); })
+      .catch(() => { if (!cancelled) setTotals(null); })
+      .finally(() => { if (!cancelled) setLoadingTotals(false); });
     return () => { cancelled = true; };
   }, [hydrated, JSON.stringify(lines)]);
-
-  const totals = serverTotals ?? clientTotals;
 
   if (!hydrated) {
     return <div className="container-page py-12"><p className="text-sm text-muted-foreground">Loading cart…</p></div>;
@@ -54,6 +54,15 @@ function CartPage() {
             action={<Button asChild><Link to="/">Continue shopping</Link></Button>}
           />
         </div>
+      </div>
+    );
+  }
+
+  if (!totals) {
+    return (
+      <div className="container-page py-8 md:py-12">
+        <h1 className="font-display text-2xl font-bold md:text-3xl">Your cart</h1>
+        <p className="mt-4 text-sm text-muted-foreground">{loadingTotals ? "Calculating totals…" : "Preparing your cart…"}</p>
       </div>
     );
   }
@@ -99,7 +108,7 @@ function CartPage() {
                     </div>
                     <p className="text-sm font-bold price-num">{formatINR(line.lineSubtotalPaise)}</p>
                   </div>
-                  {productSlug && findProductBySlug(productSlug) && (
+                  {productSlug && (
                     <button
                       onClick={() => { addWishlist(productSlug); remove(line.id); toast.success("Moved to wishlist"); }}
                       className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-semibold text-primary hover:underline"

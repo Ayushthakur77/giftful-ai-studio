@@ -1,25 +1,18 @@
 /**
- * Phase 5 price engine.
+ * Cart pricing engine (pure, synchronous).
  *
- * The single source of truth for line + cart totals. Runs isomorphically
- * (pure functions) so the same code protects both the client UI (for
- * responsive display) and the server (`compute-cart-totals`) that
- * authorises any checkout in Phase 6.
+ * The engine is intentionally *pure*: it takes a `CatalogSnapshot`
+ * (loaded from the DB by `catalog-repo.server.ts`) plus the cart lines,
+ * and returns fully priced totals. Never imports the legacy static
+ * `catalog.ts` module — pricing always reflects live DB data.
+ *
+ * Ribbons / fillers / greeting cards remain a small static add-on list
+ * because they are cosmetic packaging options, not admin-managed
+ * inventory. When admin management is added they can be swapped in the
+ * same way products/boxes were.
  *
  * Money is in **paise** (integer). Never convert to floats internally.
  */
-
-import {
-  findProductBySlug,
-  findEmptyBoxBySlug,
-  findReadyBoxBySlug,
-  findAddOn,
-  ribbons,
-  fillers,
-  greetingCards,
-  type Product,
-  type PersonalizationField,
-} from "./catalog";
 
 // ---------- Cart line types ----------
 
@@ -28,7 +21,6 @@ export type ProductLine = {
   id: string;
   productSlug: string;
   quantity: number;
-  /** { fieldKey: value } — validated per product's personalization schema */
   personalization?: Record<string, string>;
 };
 
@@ -53,7 +45,86 @@ export type CustomBoxLine = {
 
 export type CartLine = ProductLine | ReadyBoxLine | CustomBoxLine;
 
-// ---------- Line pricing ----------
+// ---------- Catalog snapshot (loaded from DB) ----------
+
+export type PersonalizationField =
+  | { key: "name"; label: string; maxLength: number; extraPaise: number }
+  | { key: "message"; label: string; maxLength: number; extraPaise: number }
+  | { key: "font"; label: string; options: string[]; extraPaise: number }
+  | { key: "color"; label: string; options: string[]; extraPaise: number };
+
+export type PricingProduct = {
+  slug: string;
+  name: string;
+  image: string;
+  pricePaise: number;
+  stock: number;
+  weightGrams: number;
+  isGiftBoxCompatible: boolean;
+  isPersonalizable: boolean;
+  personalization?: PersonalizationField[];
+  categorySlug: string | null;
+};
+
+export type PricingReadyBox = {
+  slug: string;
+  name: string;
+  image: string;
+  pricePaise: number;
+  stock: number;
+  contents: { productSlug: string; quantity: number }[];
+};
+
+export type PricingEmptyBox = {
+  slug: string;
+  name: string;
+  image: string;
+  pricePaise: number;
+  capacity: number;
+  maxWeightGrams: number;
+  allowedCategorySlugs: string[];
+  available: boolean;
+};
+
+export type CatalogSnapshot = {
+  products: Map<string, PricingProduct>;
+  readyBoxes: Map<string, PricingReadyBox>;
+  emptyBoxes: Map<string, PricingEmptyBox>;
+};
+
+export const EMPTY_SNAPSHOT: CatalogSnapshot = {
+  products: new Map(),
+  readyBoxes: new Map(),
+  emptyBoxes: new Map(),
+};
+
+// ---------- Static add-ons (packaging, not inventory) ----------
+
+export type AddOn = { slug: string; name: string; pricePaise: number };
+
+export const ribbons: AddOn[] = [
+  { slug: "no-ribbon", name: "No ribbon", pricePaise: 0 },
+  { slug: "gold-satin", name: "Gold satin", pricePaise: 4900 },
+  { slug: "red-velvet-ribbon", name: "Red velvet", pricePaise: 4900 },
+  { slug: "black-grosgrain", name: "Black grosgrain", pricePaise: 5900 },
+];
+export const fillers: AddOn[] = [
+  { slug: "no-filler", name: "No filler", pricePaise: 0 },
+  { slug: "kraft-shred", name: "Kraft shred", pricePaise: 2900 },
+  { slug: "rose-petals", name: "Dried rose petals", pricePaise: 6900 },
+  { slug: "cotton-fluff", name: "Cotton fluff", pricePaise: 3900 },
+];
+export const greetingCards: AddOn[] = [
+  { slug: "no-card", name: "No card", pricePaise: 0 },
+  { slug: "classic-card", name: "Classic gold-foil card", pricePaise: 4900 },
+  { slug: "handmade-card", name: "Handmade paper card", pricePaise: 7900 },
+];
+function findAddOn(list: AddOn[], slug: string | undefined): AddOn | undefined {
+  if (!slug) return undefined;
+  return list.find((a) => a.slug === slug);
+}
+
+// ---------- Priced line output ----------
 
 export type PricedLine = {
   id: string;
@@ -69,8 +140,8 @@ export type PricedLine = {
   errors?: string[];
 };
 
-function priceProductLine(line: ProductLine): PricedLine {
-  const p = findProductBySlug(line.productSlug);
+function priceProductLine(line: ProductLine, snap: CatalogSnapshot): PricedLine {
+  const p = snap.products.get(line.productSlug);
   const errors: string[] = [];
   if (!p) {
     return {
@@ -87,22 +158,16 @@ function priceProductLine(line: ProductLine): PricedLine {
   const qty = Math.max(1, line.quantity);
   const unit = p.pricePaise + personalizationPaise;
   return {
-    id: line.id,
-    kind: "product",
-    name: p.name,
-    image: p.image,
-    quantity: qty,
-    unitPricePaise: p.pricePaise,
-    personalizationPaise,
-    addOnPaise: 0,
+    id: line.id, kind: "product", name: p.name, image: p.image, quantity: qty,
+    unitPricePaise: p.pricePaise, personalizationPaise, addOnPaise: 0,
     lineSubtotalPaise: unit * qty,
     details: describePersonalization(p, line.personalization),
     errors: errors.length ? errors : undefined,
   };
 }
 
-function priceReadyBoxLine(line: ReadyBoxLine): PricedLine {
-  const box = findReadyBoxBySlug(line.boxSlug);
+function priceReadyBoxLine(line: ReadyBoxLine, snap: CatalogSnapshot): PricedLine {
+  const box = snap.readyBoxes.get(line.boxSlug);
   if (!box) {
     return {
       id: line.id, kind: "ready-box", name: "Unavailable box", image: "",
@@ -110,26 +175,25 @@ function priceReadyBoxLine(line: ReadyBoxLine): PricedLine {
       addOnPaise: 0, lineSubtotalPaise: 0, errors: ["Gift box no longer available"],
     };
   }
+  const errors: string[] = [];
+  if (box.stock <= 0) errors.push("Out of stock");
+  else if (line.quantity > box.stock) errors.push(`Only ${box.stock} left`);
+
   const qty = Math.max(1, line.quantity);
   return {
-    id: line.id,
-    kind: "ready-box",
-    name: box.name,
-    image: box.image,
-    quantity: qty,
-    unitPricePaise: box.pricePaise,
-    personalizationPaise: 0,
-    addOnPaise: 0,
+    id: line.id, kind: "ready-box", name: box.name, image: box.image, quantity: qty,
+    unitPricePaise: box.pricePaise, personalizationPaise: 0, addOnPaise: 0,
     lineSubtotalPaise: box.pricePaise * qty,
     details: box.contents.map((c) => {
-      const p = findProductBySlug(c.productSlug);
+      const p = snap.products.get(c.productSlug);
       return `${c.quantity}× ${p?.name ?? c.productSlug}`;
     }),
+    errors: errors.length ? errors : undefined,
   };
 }
 
-function priceCustomBoxLine(line: CustomBoxLine): PricedLine {
-  const box = findEmptyBoxBySlug(line.emptyBoxSlug);
+function priceCustomBoxLine(line: CustomBoxLine, snap: CatalogSnapshot): PricedLine {
+  const box = snap.emptyBoxes.get(line.emptyBoxSlug);
   const errors: string[] = [];
   if (!box) {
     return {
@@ -138,7 +202,7 @@ function priceCustomBoxLine(line: CustomBoxLine): PricedLine {
       addOnPaise: 0, lineSubtotalPaise: 0, errors: ["Gift box no longer available"],
     };
   }
-  // Gift builder validation
+  if (!box.available) errors.push("Gift box is currently unavailable");
   const totalSlots = line.items.reduce((s, it) => s + it.quantity, 0);
   if (totalSlots > box.capacity) errors.push(`Box holds ${box.capacity} items (you added ${totalSlots})`);
   let totalWeight = 0;
@@ -146,10 +210,10 @@ function priceCustomBoxLine(line: CustomBoxLine): PricedLine {
   let personalizationPaise = 0;
   const details: string[] = [];
   for (const it of line.items) {
-    const p = findProductBySlug(it.productSlug);
+    const p = snap.products.get(it.productSlug);
     if (!p) { errors.push(`Missing product: ${it.productSlug}`); continue; }
     if (p.stock <= 0) errors.push(`${p.name}: out of stock`);
-    if (box.allowedCategories.length && !box.allowedCategories.includes(p.category)) {
+    if (box.allowedCategorySlugs.length && p.categorySlug && !box.allowedCategorySlugs.includes(p.categorySlug)) {
       errors.push(`${p.name}: not allowed in this box`);
     }
     if (!p.isGiftBoxCompatible) errors.push(`${p.name}: not compatible with gift boxes`);
@@ -174,37 +238,30 @@ function priceCustomBoxLine(line: CustomBoxLine): PricedLine {
   const qty = Math.max(1, line.quantity);
   const unit = box.pricePaise + productsPaise + personalizationPaise + addOnPaise;
   return {
-    id: line.id,
-    kind: "custom-box",
-    name: box.name,
-    image: box.image,
-    quantity: qty,
+    id: line.id, kind: "custom-box", name: box.name, image: box.image, quantity: qty,
     unitPricePaise: box.pricePaise + productsPaise,
-    personalizationPaise,
-    addOnPaise,
+    personalizationPaise, addOnPaise,
     lineSubtotalPaise: unit * qty,
-    details,
-    errors: errors.length ? errors : undefined,
+    details, errors: errors.length ? errors : undefined,
   };
 }
 
-export function priceLine(line: CartLine): PricedLine {
+export function priceLine(line: CartLine, snap: CatalogSnapshot): PricedLine {
   switch (line.kind) {
-    case "product":    return priceProductLine(line);
-    case "ready-box":  return priceReadyBoxLine(line);
-    case "custom-box": return priceCustomBoxLine(line);
+    case "product":    return priceProductLine(line, snap);
+    case "ready-box":  return priceReadyBoxLine(line, snap);
+    case "custom-box": return priceCustomBoxLine(line, snap);
   }
 }
 
 // ---------- Personalization ----------
 
 function personalizationCost(
-  product: Product,
+  product: PricingProduct,
   values: Record<string, string> | undefined,
   errors: string[],
 ): number {
-  if (!values) return 0;
-  if (!product.isPersonalizable) return 0;
+  if (!values || !product.isPersonalizable) return 0;
   const fields = product.personalization ?? [];
   let extra = 0;
   for (const f of fields) {
@@ -223,17 +280,14 @@ function validateField(f: PersonalizationField, value: string, errors: string[])
     }
     return f.extraPaise;
   }
-  if (f.key === "font" || f.key === "color") {
-    if (!f.options.includes(value)) {
-      errors.push(`${f.label}: invalid choice`);
-      return 0;
-    }
-    return f.extraPaise;
+  if (!f.options.includes(value)) {
+    errors.push(`${f.label}: invalid choice`);
+    return 0;
   }
-  return 0;
+  return f.extraPaise;
 }
 
-function describePersonalization(p: Product, values?: Record<string, string>): string[] | undefined {
+function describePersonalization(p: PricingProduct, values?: Record<string, string>): string[] | undefined {
   if (!values || !p.personalization) return undefined;
   const out: string[] = [];
   for (const f of p.personalization) {
@@ -258,22 +312,18 @@ export type CartTotals = {
 
 export const FREE_SHIPPING_THRESHOLD_PAISE = 99900; // ₹999
 export const FLAT_SHIPPING_PAISE = 9900;            // ₹99
-export const TAX_PCT = 18; // GST 18% (Phase 8; admin-configurable later)
+export const TAX_PCT = 18;
 
-export function computeCart(lines: CartLine[]): CartTotals {
-  const priced = lines.map(priceLine);
+export function computeCart(lines: CartLine[], snap: CatalogSnapshot = EMPTY_SNAPSHOT): CartTotals {
+  const priced = lines.map((l) => priceLine(l, snap));
   const subtotal = priced.reduce((s, l) => s + l.lineSubtotalPaise, 0);
   const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD_PAISE ? 0 : FLAT_SHIPPING_PAISE;
   const tax = Math.round((subtotal * TAX_PCT) / 100);
   const errors = priced.flatMap((l) => l.errors ?? []);
   return {
-    lines: priced,
-    subtotalPaise: subtotal,
-    discountPaise: 0,
-    shippingPaise: shipping,
-    taxPaise: tax,
+    lines: priced, subtotalPaise: subtotal, discountPaise: 0,
+    shippingPaise: shipping, taxPaise: tax,
     grandTotalPaise: subtotal + shipping + tax,
-    errors,
-    free_shipping_threshold_paise: FREE_SHIPPING_THRESHOLD_PAISE,
+    errors, free_shipping_threshold_paise: FREE_SHIPPING_THRESHOLD_PAISE,
   };
 }

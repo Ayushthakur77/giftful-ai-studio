@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeCart, type CartLine } from "./pricing";
+import { loadCatalogSnapshot } from "./catalog-repo.server";
 import { computeCouponDiscount } from "./coupons.functions";
 import { COMPANY } from "./company";
 
@@ -37,7 +38,8 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
     if (addrErr) return { ok: false as const, error: addrErr.message };
     if (!addr) return { ok: false as const, error: "Address not found" };
 
-    const base = computeCart(data.lines as CartLine[]);
+    const snap = await loadCatalogSnapshot(data.lines as CartLine[]);
+    const base = computeCart(data.lines as CartLine[], snap);
     if (base.errors.length > 0) return { ok: false as const, error: base.errors.join(" · ") };
     if (base.grandTotalPaise <= 0) return { ok: false as const, error: "Cart is empty" };
 

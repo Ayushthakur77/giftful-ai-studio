@@ -34,16 +34,18 @@ export const Route = createFileRoute("/api/public/razorpay-webhook")({
         if (!payment) return new Response("payment not found", { status: 200 });
 
         if (event === "payment.captured") {
-          await supabaseAdmin.from("payments").update({
-            status: "captured",
-            provider_payment_id: paymentEntity.id,
-            method: paymentEntity.method,
-            raw_response: paymentEntity,
-          }).eq("id", payment.id);
-          // Only advance the order if it's still awaiting payment
-          await supabaseAdmin.from("orders")
-            .update({ status: "confirmed", payment_status: "paid" })
-            .eq("id", payment.order_id).eq("payment_status", "pending");
+          // Delegate everything to the shared idempotent processor so
+          // webhook and client-verify cannot diverge.
+          const { processSuccessfulPayment } = await import("@/lib/payment-processing.server");
+          await processSuccessfulPayment({
+            orderId: payment.order_id,
+            paymentRowId: payment.id,
+            captured: {
+              provider_payment_id: paymentEntity.id,
+              method: paymentEntity.method,
+              raw_response: paymentEntity,
+            },
+          });
         } else if (event === "payment.failed") {
           await supabaseAdmin.from("payments").update({
             status: "failed",
