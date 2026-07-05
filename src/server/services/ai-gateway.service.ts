@@ -16,7 +16,8 @@ export type AIMessage = { role: "system" | "user" | "assistant"; content: string
 const DEFAULT_MODEL = "google/gemini-2.5-flash";
 
 function apiKey(): string {
-  const key = env().LOVABLE_API_KEY ?? env().AI_API_KEY;
+  // Prefer user-supplied AI_API_KEY when set; fall back to the auto-provisioned LOVABLE_API_KEY.
+  const key = env().AI_API_KEY ?? env().LOVABLE_API_KEY;
   if (!key) throw new Error("AI_UNCONFIGURED");
   return key;
 }
