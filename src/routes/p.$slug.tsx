@@ -16,6 +16,8 @@ import { PersonalizationForm, type PersonalizationValues } from "@/components/pr
 import { checkPincodeFn } from "@/lib/catalog.functions";
 import { getPublicProductBySlugFn } from "@/lib/public-catalog.functions";
 import { getRecommendationsFn } from "@/lib/discovery.functions";
+import { incrementProductViewFn } from "@/lib/reviews.functions";
+import { ReviewsSection } from "@/components/product/reviews-section";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
