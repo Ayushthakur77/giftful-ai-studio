@@ -278,35 +278,6 @@ function OccasionGrid({ section }: { section: HomepageSection }) {
   );
 }
 
-function RecipientGrid({ section }: { section: HomepageSection }) {
-  const items = (section.data?.recipients ?? []) as { slug: string; name: string; tagline: string | null; image_url: string | null }[];
-  if (!items.length) return null;
-  return (
-    <section className="container-page py-8 md:py-10">
-      <SectionHeader title={section.title ?? "Shop by recipient"} subtitle={section.subtitle ?? undefined} ctaLabel="See all" ctaTo="/recipients" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 md:gap-4">
-        {items.map((r) => (
-          <Link
-            key={r.slug}
-            to="/r/$recipient"
-            params={{ recipient: r.slug }}
-            className="group flex flex-col items-center gap-2 overflow-hidden rounded-xl border border-border bg-card p-4 text-center transition-shadow hover:shadow-md"
-          >
-            <div className="aspect-square w-full max-w-24 overflow-hidden rounded-full bg-muted">
-              {r.image_url ? (
-                <img src={r.image_url} alt={r.name} className="h-full w-full object-cover" loading="lazy" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl" aria-hidden>🎁</div>
-              )}
-            </div>
-            <span className="text-sm font-semibold">{r.name}</span>
-            {r.tagline && <span className="line-clamp-1 text-xs text-muted-foreground">{r.tagline}</span>}
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 
 function GiftboxGrid({ section }: { section: HomepageSection }) {
@@ -447,8 +418,6 @@ export function HomepageRenderer({ sections }: { sections: HomepageSection[] }) 
             return <CategoryGrid key={s.id} section={s} />;
           case "occasion_grid":
             return <OccasionGrid key={s.id} section={s} />;
-          case "recipient_grid":
-            return <RecipientGrid key={s.id} section={s} />;
           case "giftbox_grid":
             return <GiftboxGrid key={s.id} section={s} />;
           case "image_cards":
