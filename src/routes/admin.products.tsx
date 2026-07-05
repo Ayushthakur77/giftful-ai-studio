@@ -219,8 +219,8 @@ function ProductDialog({ form, setForm, categories, onSave, saving }: {
           <div><Label>SKU</Label><Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></div>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <div><Label>Price (paise) *</Label><Input type="number" value={form.price_paise} onChange={(e) => setForm({ ...form, price_paise: +e.target.value })} /></div>
-          <div><Label>Offer price (paise)</Label><Input type="number" value={form.offer_price_paise ?? ""} onChange={(e) => setForm({ ...form, offer_price_paise: e.target.value ? +e.target.value : null })} /></div>
+          <div><Label>Price (₹) *</Label><Input type="number" step="0.01" min="0" value={form.price_paise ? form.price_paise / 100 : ""} onChange={(e) => setForm({ ...form, price_paise: Math.round(parseFloat(e.target.value || "0") * 100) })} /></div>
+          <div><Label>Offer price (₹)</Label><Input type="number" step="0.01" min="0" value={form.offer_price_paise != null ? form.offer_price_paise / 100 : ""} onChange={(e) => setForm({ ...form, offer_price_paise: e.target.value ? Math.round(parseFloat(e.target.value) * 100) : null })} /></div>
           <div><Label>Stock</Label><Input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: +e.target.value })} /></div>
         </div>
         <div><Label>Image URLs</Label>
