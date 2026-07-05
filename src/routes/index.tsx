@@ -185,6 +185,35 @@ function HomePage() {
         </ProductRail>
       )}
 
+      {newArrivals.length > 0 && (
+        <ProductRail title="New arrivals" subtitle="Fresh in the store" ctaLabel="See all" ctaTo="/search">
+          {newArrivals.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
+
+      {readyBoxes.length > 0 && (
+        <section className="container-page py-8 md:py-10">
+          <SectionHeader title="Ready-made gift boxes" subtitle="Curated hampers, packed and ready" ctaLabel="Shop boxes" ctaTo="/gift-boxes" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
+            {readyBoxes.slice(0, 8).map((b: any) => (
+              <Link
+                key={b.slug}
+                to="/gift-boxes"
+                className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 transition-shadow hover:shadow-sm"
+              >
+                <div className="aspect-square overflow-hidden rounded-md bg-muted">
+                  <img src={b.image} alt={b.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                </div>
+                <p className="line-clamp-2 text-sm font-medium">{b.name}</p>
+                <PriceBlock pricePaise={b.pricePaise} mrpPaise={b.mrpPaise} size="sm" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+
+
 
       <section className="container-page py-8 md:py-12">
         <SectionHeader title="What our customers say" />
