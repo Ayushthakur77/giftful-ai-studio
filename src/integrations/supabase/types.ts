@@ -1421,7 +1421,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_product_view: { Args: { _slug: string }; Returns: undefined }
       is_staff: { Args: { _uid: string }; Returns: boolean }
+      product_review_stats: {
+        Args: { _product_id: string }
+        Returns: {
+          avg_rating: number
+          review_count: number
+        }[]
+      }
       redeem_coupon: {
         Args: {
           _coupon_id: string
