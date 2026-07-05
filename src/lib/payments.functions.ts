@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeCart, type CartLine } from "./pricing";
 import { loadCatalogSnapshot } from "./catalog-repo.server";
 import { computeCouponDiscount } from "./coupons.functions";
+import { resolveShippingForState } from "./shipping.server";
 
 const personalizationSchema = z.record(z.string(), z.string().max(500)).optional();
 
@@ -23,12 +24,14 @@ const cartLineSchema = z.discriminatedUnion("kind", [
  * Server-authoritative pricing + coupon evaluation.
  */
 async function computeTotalsWithCoupon(
-  supabase: any, userId: string, lines: CartLine[], couponCode?: string,
+  supabase: any, userId: string, lines: CartLine[], couponCode?: string, shippingState?: string | null,
 ) {
   const snap = await loadCatalogSnapshot(lines);
   const base = computeCart(lines, snap);
+  // State-based shipping override (falls back when no rule matches).
+  const quote = await resolveShippingForState(shippingState ?? null, base.subtotalPaise);
   let couponDiscountPaise = 0;
-  let shippingPaise = base.shippingPaise;
+  let shippingPaise = quote.shippingPaise;
   let couponId: string | null = null;
   let couponError: string | null = null;
 
@@ -86,7 +89,7 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!addr) return { ok: false as const, error: "Address not found" };
 
-    const totals = await computeTotalsWithCoupon(context.supabase, context.userId, data.lines as CartLine[], data.couponCode);
+    const totals = await computeTotalsWithCoupon(context.supabase, context.userId, data.lines as CartLine[], data.couponCode, addr.state);
     if (totals.base.errors.length > 0) return { ok: false as const, error: totals.base.errors.join(" · ") };
     if (totals.couponError) return { ok: false as const, error: totals.couponError };
     if (totals.grandTotalPaise <= 0) return { ok: false as const, error: "Cart is empty" };

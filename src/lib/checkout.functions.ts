@@ -5,6 +5,7 @@ import { computeCart, type CartLine } from "./pricing";
 import { loadCatalogSnapshot } from "./catalog-repo.server";
 import { computeCouponDiscount } from "./coupons.functions";
 import { COMPANY } from "./company";
+import { resolveShippingForState } from "./shipping.server";
 
 const personalizationSchema = z.record(z.string(), z.string().max(500)).optional();
 
@@ -43,9 +44,15 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
     if (base.errors.length > 0) return { ok: false as const, error: base.errors.join(" · ") };
     if (base.grandTotalPaise <= 0) return { ok: false as const, error: "Cart is empty" };
 
+    // State-based shipping (falls back to defaults if no rule matches).
+    const quote = await resolveShippingForState(addr.state, base.subtotalPaise);
+    if (!quote.codAvailable) {
+      return { ok: false as const, error: "Cash on Delivery is not available for this location. Please use online payment." };
+    }
+
     // Coupon (optional)
     let couponDiscountPaise = 0;
-    let shippingPaise = base.shippingPaise;
+    let shippingPaise = quote.shippingPaise;
     let couponCode: string | null = null;
     let couponId: string | null = null;
     if (data.couponCode) {
