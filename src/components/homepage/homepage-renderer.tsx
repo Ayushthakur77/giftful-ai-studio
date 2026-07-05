@@ -237,14 +237,14 @@ function OccasionGrid({ section }: { section: HomepageSection }) {
 
   // Curated palette + icon per common occasion — falls back to neutral card.
   const themes: Record<string, { gradient: string; ring: string; Icon: React.ComponentType<{ className?: string }> }> = {
-    birthday:    { gradient: "from-rose-100 via-rose-50 to-amber-50",     ring: "ring-rose-200/60",    Icon: CakeIcon },
-    anniversary: { gradient: "from-fuchsia-100 via-pink-50 to-rose-50",   ring: "ring-fuchsia-200/60", Icon: HeartIcon },
-    wedding:     { gradient: "from-amber-100 via-yellow-50 to-white",     ring: "ring-amber-200/60",   Icon: FlowerIcon },
-    rakhi:       { gradient: "from-orange-100 via-amber-50 to-rose-50",   ring: "ring-orange-200/60", Icon: RibbonIcon },
-    diwali:      { gradient: "from-yellow-100 via-orange-50 to-rose-50",  ring: "ring-yellow-300/60", Icon: LampIcon },
-    corporate:   { gradient: "from-slate-100 via-neutral-50 to-white",    ring: "ring-slate-200/60",  Icon: BriefcaseIcon },
+    birthday:    { gradient: "from-rose-100 via-rose-50 to-amber-50",     ring: "ring-rose-200/60",    Icon: Cake },
+    anniversary: { gradient: "from-fuchsia-100 via-pink-50 to-rose-50",   ring: "ring-fuchsia-200/60", Icon: Heart },
+    wedding:     { gradient: "from-amber-100 via-yellow-50 to-white",     ring: "ring-amber-200/60",   Icon: Flower2 },
+    rakhi:       { gradient: "from-orange-100 via-amber-50 to-rose-50",   ring: "ring-orange-200/60", Icon: Gift },
+    diwali:      { gradient: "from-yellow-100 via-orange-50 to-rose-50",  ring: "ring-yellow-300/60", Icon: Lamp },
+    corporate:   { gradient: "from-slate-100 via-neutral-50 to-white",    ring: "ring-slate-200/60",  Icon: Briefcase },
   };
-  const fallback = { gradient: "from-primary/10 via-primary/5 to-transparent", ring: "ring-primary/20", Icon: SparklesIcon };
+  const fallback = { gradient: "from-primary/10 via-primary/5 to-transparent", ring: "ring-primary/20", Icon: Sparkles };
 
   return (
     <section className="container-page py-10 md:py-14">
