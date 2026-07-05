@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { autocompleteProductsFn } from "@/lib/discovery.functions";
-import { formatPricePaise } from "@/lib/pricing";
+import { formatINR } from "@/lib/catalog";
 
 const RECENT_KEY = "giftty:recent-searches";
 
