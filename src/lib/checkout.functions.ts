@@ -66,7 +66,7 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
       if (!row?.valid) return { ok: false as const, error: row?.error ?? "Invalid coupon" };
       const applied = computeCouponDiscount(
         row.discount_type, row.discount_value, row.max_discount_paise,
-        base.subtotalPaise, base.shippingPaise,
+        base.subtotalPaise, quote.shippingPaise,
       );
       couponDiscountPaise = applied.discountPaise;
       if (applied.shippingWaived) shippingPaise = 0;
