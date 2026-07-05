@@ -27,8 +27,13 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
     notes: z.string().max(500).optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
+    // Defense-in-depth: explicit ownership check on top of addresses RLS.
     const { data: addr, error: addrErr } = await context.supabase
-      .from("addresses").select("*").eq("id", data.addressId).maybeSingle();
+      .from("addresses")
+      .select("*")
+      .eq("id", data.addressId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
     if (addrErr) return { ok: false as const, error: addrErr.message };
     if (!addr) return { ok: false as const, error: "Address not found" };
 
@@ -129,15 +134,21 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
       { order_id: order.id, status: "confirmed", note: "Cash on Delivery confirmed" },
     ]);
 
-    // Coupon redemption
+    // Coupon redemption — atomic bump + insert via RPC so a limited-use
+    // coupon can never be over-redeemed by simultaneous checkouts.
     if (couponId && couponDiscountPaise > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      await supabaseAdmin.from("coupon_redemptions").insert({
-        coupon_id: couponId, user_id: context.userId,
-        order_id: order.id, discount_paise: couponDiscountPaise,
+      const { data: redeemed, error: redeemErr } = await context.supabase.rpc("redeem_coupon", {
+        _coupon_id: couponId,
+        _user_id: context.userId,
+        _order_id: order.id,
+        _discount_paise: couponDiscountPaise,
       });
-      const { data: c } = await supabaseAdmin.from("coupons").select("usage_count").eq("id", couponId).maybeSingle();
-      await supabaseAdmin.from("coupons").update({ usage_count: (c?.usage_count ?? 0) + 1 }).eq("id", couponId);
+      if (redeemErr || !redeemed) {
+        // Roll back: refund the order and fail the checkout so the user retries.
+        await context.supabase.from("order_items").delete().eq("order_id", order.id);
+        await context.supabase.from("orders").delete().eq("id", order.id);
+        return { ok: false as const, error: "Coupon usage limit reached. Please retry." };
+      }
     }
 
     // In-app notification

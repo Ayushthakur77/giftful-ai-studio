@@ -8,29 +8,53 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSuperAdmin } from "./admin-shared";
 
-const SESSION_COOKIE = "giftty_session";
-
-async function getUserId(): Promise<string | null> {
-  const { getCookie } = await import("@tanstack/react-start/server");
-  const token = getCookie(SESSION_COOKIE);
-  if (!token) return null;
+/**
+ * Best-effort user id for rate-limit bucketing on public AI endpoints.
+ *
+ * Reads the bearer token attached by the client function-middleware and
+ * decodes the `sub` claim (unverified — verification is not required for
+ * a per-user rate-limit bucket key). Falls back to the caller's IP.
+ * Never throws.
+ */
+async function getRateLimitKey(): Promise<string> {
   try {
-    const { authService } = await import("@/server/services/auth.service");
-    const me = await authService.me(token);
-    return me?.id ?? null;
+    const { getRequestHeader, getRequestIP } = await import("@tanstack/react-start/server");
+    const auth = getRequestHeader("authorization") ?? "";
+    if (auth.startsWith("Bearer ")) {
+      const token = auth.slice(7);
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+        const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+        const payload = JSON.parse(
+          typeof atob === "function"
+            ? atob(padded)
+            : Buffer.from(padded, "base64").toString("utf8"),
+        ) as { sub?: string };
+        if (payload.sub) return `u:${payload.sub}`;
+      }
+    }
+    const ip = getRequestIP({ xForwardedFor: true });
+    if (ip) return `ip:${ip}`;
   } catch {
-    return null;
+    // fall through
   }
+  return "guest";
 }
 
 async function requireSlot(feature: string): Promise<{ userKey: string }> {
-  const uid = await getUserId();
-  const key = `${feature}:${uid ?? "guest"}`;
+  const userKey = await getRateLimitKey();
+  const key = `${feature}:${userKey}`;
   const { rateLimit } = await import("@/server/services/ai-gateway.service");
   const gate = rateLimit(key);
   if (!gate.ok) throw new Response(`Rate limited. Retry in ${gate.retryAfter}s.`, { status: 429 });
-  return { userKey: uid ?? "guest" };
+  return { userKey };
+}
+
+function extractUserId(userKey: string): string | undefined {
+  return userKey.startsWith("u:") ? userKey.slice(2) : undefined;
 }
 
 // ---------- Assistant ----------
@@ -49,10 +73,9 @@ export const aiRecommendFn = createServerFn({ method: "POST" })
     const { isEnabled } = await import("@/server/services/ai-settings.service");
     if (!isEnabled("assistant")) return { ok: false as const, error: "AI assistant is disabled." };
     try {
-      await requireSlot("assistant");
-      const uid = await getUserId();
+      const { userKey } = await requireSlot("assistant");
       const { recommendGifts } = await import("@/server/services/ai-recommend.service");
-      const result = await recommendGifts({ ...data, userId: uid ?? undefined });
+      const result = await recommendGifts({ ...data, userId: extractUserId(userKey) });
       return { ok: true as const, ...result };
     } catch (e) {
       return { ok: false as const, error: friendly(e) };
@@ -74,10 +97,9 @@ export const aiBuildBoxFn = createServerFn({ method: "POST" })
     const { isEnabled } = await import("@/server/services/ai-settings.service");
     if (!isEnabled("builder")) return { ok: false as const, error: "AI gift-box builder is disabled." };
     try {
-      await requireSlot("builder");
-      const uid = await getUserId();
+      const { userKey } = await requireSlot("builder");
       const { buildGiftBox } = await import("@/server/services/ai-recommend.service");
-      const draft = await buildGiftBox({ ...data, userId: uid ?? undefined });
+      const draft = await buildGiftBox({ ...data, userId: extractUserId(userKey) });
       return { ok: true as const, draft };
     } catch (e) {
       return { ok: false as const, error: friendly(e) };
@@ -101,10 +123,9 @@ export const aiGreetingFn = createServerFn({ method: "POST" })
     const { isEnabled } = await import("@/server/services/ai-settings.service");
     if (!isEnabled("greeting")) return { ok: false as const, error: "AI greeting generator is disabled." };
     try {
-      await requireSlot("greeting");
-      const uid = await getUserId();
+      const { userKey } = await requireSlot("greeting");
       const { generateGreeting } = await import("@/server/services/ai-greeting.service");
-      const message = await generateGreeting({ ...data, userId: uid ?? undefined });
+      const message = await generateGreeting({ ...data, userId: extractUserId(userKey) });
       return { ok: true as const, message };
     } catch (e) {
       return { ok: false as const, error: friendly(e) };
@@ -121,10 +142,9 @@ export const aiSearchFn = createServerFn({ method: "POST" })
     const { isEnabled } = await import("@/server/services/ai-settings.service");
     if (!isEnabled("search")) return { ok: false as const, error: "AI search is disabled." };
     try {
-      await requireSlot("search");
-      const uid = await getUserId();
+      const { userKey } = await requireSlot("search");
       const { aiSearch } = await import("@/server/services/ai-search.service");
-      const { results, interpretation } = await aiSearch(data.q, uid ?? undefined);
+      const { results, interpretation } = await aiSearch(data.q, extractUserId(userKey));
       return {
         ok: true as const,
         interpretation,
@@ -165,19 +185,12 @@ export const aiHomepageFn = createServerFn({ method: "POST" })
 
 // ---------- Admin: settings + logs ----------
 
-async function requireAdmin(): Promise<void> {
-  const { getCookie } = await import("@tanstack/react-start/server");
-  const token = getCookie(SESSION_COOKIE);
-  const { authService } = await import("@/server/services/auth.service");
-  const me = await authService.me(token);
-  if (!me || !me.isSuperAdmin) throw new Response("Forbidden", { status: 403 });
-}
-
-export const getAiSettingsFn = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
-  const { getAiSettings } = await import("@/server/services/ai-settings.service");
-  return getAiSettings();
-});
+export const getAiSettingsFn = createServerFn({ method: "GET" })
+  .middleware([requireSuperAdmin])
+  .handler(async () => {
+    const { getAiSettings } = await import("@/server/services/ai-settings.service");
+    return getAiSettings();
+  });
 
 const settingsInput = z.object({
   enabled: z.record(z.string(), z.boolean()).optional(),
@@ -186,18 +199,19 @@ const settingsInput = z.object({
 });
 
 export const updateAiSettingsFn = createServerFn({ method: "POST" })
+  .middleware([requireSuperAdmin])
   .inputValidator((d) => settingsInput.parse(d))
   .handler(async ({ data }) => {
-    await requireAdmin();
     const { updateAiSettings } = await import("@/server/services/ai-settings.service");
     return updateAiSettings(data as never);
   });
 
-export const listAiLogsFn = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
-  const { listAiLogs } = await import("@/server/services/ai-log.service");
-  return listAiLogs(100);
-});
+export const listAiLogsFn = createServerFn({ method: "GET" })
+  .middleware([requireSuperAdmin])
+  .handler(async () => {
+    const { listAiLogs } = await import("@/server/services/ai-log.service");
+    return listAiLogs(100);
+  });
 
 // ---------- Helpers ----------
 
