@@ -178,7 +178,12 @@ export const adminListHomepageFn = createServerFn({ method: "GET" })
 
 const sectionInput = z.object({
   id: z.string().uuid().optional(),
-  kind: z.enum(["hero", "slider", "featured", "trending", "best_sellers", "new_arrivals", "festival", "ai_recommendations", "promo_card", "category_grid", "giftbox_grid"]),
+  kind: z.enum([
+    "hero","hero_slider","slider","featured","trending","best_sellers","new_arrivals",
+    "festival","ai_recommendations","promo_card","category_grid","giftbox_grid",
+    "occasion_grid","recipient_grid","relationship_grid","testimonials",
+    "banner_strip","usp_strip","countdown_offer","product_showcase","image_cards",
+  ]),
   title: z.string().nullable().optional(),
   subtitle: z.string().nullable().optional(),
   config: z.record(z.string(), z.unknown()).default({}),
