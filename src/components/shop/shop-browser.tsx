@@ -1,6 +1,5 @@
-import { useMemo } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { Grid2x2, LayoutList, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,15 +12,14 @@ import {
   categories as allCategories,
   occasions as allOccasions,
   recipients as allRecipients,
-  discountPct,
   type Product,
   type CategorySlug,
   type OccasionSlug,
   type RecipientSlug,
   type SortKey,
 } from "@/lib/catalog";
-import { listPublicProductsFn } from "@/lib/public-catalog.functions";
-import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
+import { searchProductsFn } from "@/lib/discovery.functions";
+import { ProductCard } from "@/components/product/product-card";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { PackageSearch } from "lucide-react";
 
@@ -58,37 +56,43 @@ export function ShopBrowser({
 }) {
   const navigate = useNavigate({ from: routeFrom as any }) as unknown as (opts: { search: any }) => void;
 
-  const filters = {
-    q: search.q,
-    category: lockCategory ?? search.category,
-    occasion: lockOccasion ?? search.occasion,
-    recipient: search.recipient,
-    minPrice: search.minPrice,
-    maxPrice: search.maxPrice,
-    minRating: search.minRating,
-    discountOnly: search.discount,
-    personalizableOnly: search.personalizable,
-    giftBoxCompatibleOnly: search.giftBoxCompat,
-    inStockOnly: search.inStock,
-  };
   const sort = search.sort ?? "popularity";
   const view = search.view ?? "grid";
   const page = search.page ?? 1;
+  const category = lockCategory ?? search.category;
+  const occasion = lockOccasion ?? search.occasion;
+
+  const input = {
+    q: search.q,
+    categorySlug: category,
+    occasion,
+    recipient: search.recipient,
+    minPrice: search.minPrice,
+    maxPrice: search.maxPrice,
+    discountOnly: search.discount,
+    inStockOnly: search.inStock,
+    giftBoxOnly: search.giftBoxCompat,
+    sort,
+    page,
+    pageSize: PAGE_SIZE,
+  };
 
   const productsQuery = useQuery({
-    queryKey: ["public-products", "browser", lockCategory ?? null],
-    queryFn: () => listPublicProductsFn({ data: { categorySlug: lockCategory, limit: 60 } }),
+    queryKey: ["discovery", "search", input],
+    queryFn: () => searchProductsFn({ data: input }),
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
   });
-  const all = productsQuery.data ?? [];
-
-  const results = useMemo(() => applyFilters(all, filters, sort), [all, JSON.stringify(filters), sort]);
-  const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
-  const pageResults = results.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const results = productsQuery.data?.items ?? [];
+  const total = productsQuery.data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pageResults = results;
 
   function update(patch: Partial<BrowserSearch>) {
     navigate({ search: (prev: BrowserSearch) => ({ ...prev, ...patch, page: 1 }) });
   }
+
+
 
 
   const filterPanel = (
