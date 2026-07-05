@@ -117,24 +117,9 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop search */}
-        <form
-          role="search"
-          action="/search"
-          method="get"
-          className="ml-4 hidden flex-1 md:block"
-        >
-          <label htmlFor="site-search" className="sr-only">Search gifts</label>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="site-search"
-              name="q"
-              type="search"
-              placeholder="Search for gifts, flowers, cakes, occasions..."
-              className="h-10 rounded-md border-border bg-surface pl-9"
-            />
-          </div>
-        </form>
+        <div className="ml-4 hidden flex-1 md:block">
+          <SearchAutocomplete />
+        </div>
 
         {/* Actions */}
         <div className="ml-auto flex items-center gap-1">
