@@ -257,8 +257,6 @@ function TrendingRail({ excludeSlug }: { excludeSlug: string }) {
       {items.slice(0, 8).map((p: Product) => <ProductCard key={p.slug} product={p} />)}
     </ProductRail>
   );
-    </div>
-  );
 }
 
 function StockLabel({ product }: { product: Product }) {
