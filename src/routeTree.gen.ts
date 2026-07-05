@@ -38,6 +38,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminRelationshipsRouteImport } from './routes/admin.relationships'
 import { Route as AdminRecipientsRouteImport } from './routes/admin.recipients'
 import { Route as AdminReadyBoxesRouteImport } from './routes/admin.ready-boxes'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
@@ -211,6 +212,11 @@ const AdminReviewsRoute = AdminReviewsRouteImport.update({
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRelationshipsRoute = AdminRelationshipsRouteImport.update({
+  id: '/relationships',
+  path: '/relationships',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminRecipientsRoute = AdminRecipientsRouteImport.update({
@@ -404,6 +410,7 @@ export interface FileRoutesByFullPath {
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
   '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -463,6 +470,7 @@ export interface FileRoutesByTo {
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
   '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -524,6 +532,7 @@ export interface FileRoutesById {
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
   '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -586,6 +595,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/ready-boxes'
     | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -645,6 +655,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/ready-boxes'
     | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -705,6 +716,7 @@ export interface FileRouteTypes {
     | '/admin/products'
     | '/admin/ready-boxes'
     | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -953,6 +965,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/admin/reports'
       preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/relationships': {
+      id: '/admin/relationships'
+      path: '/relationships'
+      fullPath: '/admin/relationships'
+      preLoaderRoute: typeof AdminRelationshipsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/recipients': {
@@ -1217,6 +1236,7 @@ interface AdminRouteChildren {
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReadyBoxesRoute: typeof AdminReadyBoxesRoute
   AdminRecipientsRoute: typeof AdminRecipientsRoute
+  AdminRelationshipsRoute: typeof AdminRelationshipsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
@@ -1242,6 +1262,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminProductsRoute: AdminProductsRoute,
   AdminReadyBoxesRoute: AdminReadyBoxesRoute,
   AdminRecipientsRoute: AdminRecipientsRoute,
+  AdminRelationshipsRoute: AdminRelationshipsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
