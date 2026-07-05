@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock, Cake, Heart, Flower2, Gift, Lamp, Briefcase } from "lucide-react";
+import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceBlock } from "@/components/product/price-block";
@@ -231,52 +231,6 @@ function CategoryGrid({ section }: { section: HomepageSection }) {
   );
 }
 
-function OccasionGrid({ section }: { section: HomepageSection }) {
-  const items = (section.data?.occasions ?? []) as { slug: string; name: string; emoji?: string; image?: string }[];
-  if (!items.length) return null;
-
-  // Curated palette + icon per common occasion — falls back to neutral card.
-  const themes: Record<string, { gradient: string; ring: string; Icon: React.ComponentType<{ className?: string }> }> = {
-    birthday:    { gradient: "from-rose-100 via-rose-50 to-amber-50",     ring: "ring-rose-200/60",    Icon: Cake },
-    anniversary: { gradient: "from-fuchsia-100 via-pink-50 to-rose-50",   ring: "ring-fuchsia-200/60", Icon: Heart },
-    wedding:     { gradient: "from-amber-100 via-yellow-50 to-white",     ring: "ring-amber-200/60",   Icon: Flower2 },
-    rakhi:       { gradient: "from-orange-100 via-amber-50 to-rose-50",   ring: "ring-orange-200/60", Icon: Gift },
-    diwali:      { gradient: "from-yellow-100 via-orange-50 to-rose-50",  ring: "ring-yellow-300/60", Icon: Lamp },
-    corporate:   { gradient: "from-slate-100 via-neutral-50 to-white",    ring: "ring-slate-200/60",  Icon: Briefcase },
-  };
-  const fallback = { gradient: "from-primary/10 via-primary/5 to-transparent", ring: "ring-primary/20", Icon: Sparkles };
-
-  return (
-    <section className="container-page py-10 md:py-14">
-      <SectionHeader title={section.title ?? "Shop by occasion"} subtitle={section.subtitle ?? undefined} />
-      <div className="grid grid-cols-3 gap-3 md:grid-cols-6 md:gap-5">
-        {items.map((o) => {
-          const t = themes[o.slug] ?? fallback;
-          const Icon = t.Icon;
-          return (
-            <Link
-              key={o.slug}
-              to="/o/$occasion"
-              params={{ occasion: o.slug }}
-              className="group relative flex aspect-square flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-card p-4 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.18)] hover:ring-2"
-            >
-              {/* Soft gradient wash */}
-              <div className={`pointer-events-none absolute inset-0 bg-linear-to-br ${t.gradient} opacity-70 transition-opacity duration-300 group-hover:opacity-100`} aria-hidden />
-              {/* Radial glow on hover */}
-              <div className="pointer-events-none absolute -inset-8 bg-[radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.9),transparent_60%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" aria-hidden />
-
-              <span className={`relative grid size-14 place-items-center rounded-full bg-white/80 ring-1 ${t.ring} shadow-sm backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-4deg]`}>
-                <Icon className="size-6 text-foreground/80" />
-              </span>
-              <span className="relative font-display text-xs font-semibold tracking-wide text-foreground md:text-sm">{o.name}</span>
-              <span className="relative text-[10px] uppercase tracking-[0.14em] text-muted-foreground/80">Explore</span>
-            </Link>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
 
 
@@ -415,10 +369,6 @@ export function HomepageRenderer({ sections }: { sections: HomepageSection[] }) 
           case "countdown_offer":
             return <CountdownOffer key={s.id} section={s} />;
           case "category_grid":
-            return <CategoryGrid key={s.id} section={s} />;
-          case "occasion_grid":
-            return <OccasionGrid key={s.id} section={s} />;
-          case "giftbox_grid":
             return <GiftboxGrid key={s.id} section={s} />;
           case "image_cards":
             return <ImageCards key={s.id} section={s} />;
