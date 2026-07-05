@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState, redirect } from "@tansta
 import {
   LayoutDashboard, Package, FolderTree, ShoppingCart, Users, Tags, LayoutTemplate,
   Settings, Gift, PackageOpen, PartyPopper, Sparkles, Star, Boxes, Truck,
-  CreditCard, FileBarChart, LineChart, Bell, Shield, ScrollText,
+  CreditCard, FileBarChart, LineChart, Bell, Shield, ScrollText, Users2, HeartHandshake,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
