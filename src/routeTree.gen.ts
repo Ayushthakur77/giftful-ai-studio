@@ -14,6 +14,8 @@ import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RelationshipsRouteImport } from './routes/relationships'
+import { Route as RecipientsRouteImport } from './routes/recipients'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GiftBoxesRouteImport } from './routes/gift-boxes'
@@ -28,6 +30,8 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
+import { Route as RelRelationshipRouteImport } from './routes/rel.$relationship'
+import { Route as RRecipientRouteImport } from './routes/r.$recipient'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as OOccasionRouteImport } from './routes/o.$occasion'
 import { Route as CCategoryRouteImport } from './routes/c.$category'
@@ -38,6 +42,8 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminReviewsRouteImport } from './routes/admin.reviews'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminRelationshipsRouteImport } from './routes/admin.relationships'
+import { Route as AdminRecipientsRouteImport } from './routes/admin.recipients'
 import { Route as AdminReadyBoxesRouteImport } from './routes/admin.ready-boxes'
 import { Route as AdminProductsRouteImport } from './routes/admin.products'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
@@ -90,6 +96,16 @@ const ReturnsRoute = ReturnsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelationshipsRoute = RelationshipsRouteImport.update({
+  id: '/relationships',
+  path: '/relationships',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipientsRoute = RecipientsRouteImport.update({
+  id: '/recipients',
+  path: '/recipients',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -162,6 +178,16 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AccountRoute,
 } as any)
+const RelRelationshipRoute = RelRelationshipRouteImport.update({
+  id: '/rel/$relationship',
+  path: '/rel/$relationship',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RRecipientRoute = RRecipientRouteImport.update({
+  id: '/r/$recipient',
+  path: '/r/$recipient',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
@@ -210,6 +236,16 @@ const AdminReviewsRoute = AdminReviewsRouteImport.update({
 const AdminReportsRoute = AdminReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRelationshipsRoute = AdminRelationshipsRouteImport.update({
+  id: '/relationships',
+  path: '/relationships',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRecipientsRoute = AdminRecipientsRouteImport.update({
+  id: '/recipients',
+  path: '/recipients',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminReadyBoxesRoute = AdminReadyBoxesRouteImport.update({
@@ -368,6 +404,8 @@ export interface FileRoutesByFullPath {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -397,6 +435,8 @@ export interface FileRoutesByFullPath {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
+  '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -407,6 +447,8 @@ export interface FileRoutesByFullPath {
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -426,6 +468,8 @@ export interface FileRoutesByTo {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -455,6 +499,8 @@ export interface FileRoutesByTo {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
+  '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -465,6 +511,8 @@ export interface FileRoutesByTo {
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -486,6 +534,8 @@ export interface FileRoutesById {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -515,6 +565,8 @@ export interface FileRoutesById {
   '/admin/payments': typeof AdminPaymentsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/ready-boxes': typeof AdminReadyBoxesRoute
+  '/admin/recipients': typeof AdminRecipientsRoute
+  '/admin/relationships': typeof AdminRelationshipsRoute
   '/admin/reports': typeof AdminReportsRoute
   '/admin/reviews': typeof AdminReviewsRoute
   '/admin/security': typeof AdminSecurityRoute
@@ -525,6 +577,8 @@ export interface FileRoutesById {
   '/c/$category': typeof CCategoryRouteWithChildren
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
+  '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -547,6 +601,8 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -576,6 +632,8 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/products'
     | '/admin/ready-boxes'
+    | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -586,6 +644,8 @@ export interface FileRouteTypes {
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account/'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -605,6 +665,8 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -634,6 +696,8 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/products'
     | '/admin/ready-boxes'
+    | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -644,6 +708,8 @@ export interface FileRouteTypes {
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -664,6 +730,8 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -693,6 +761,8 @@ export interface FileRouteTypes {
     | '/admin/payments'
     | '/admin/products'
     | '/admin/ready-boxes'
+    | '/admin/recipients'
+    | '/admin/relationships'
     | '/admin/reports'
     | '/admin/reviews'
     | '/admin/security'
@@ -703,6 +773,8 @@ export interface FileRouteTypes {
     | '/c/$category'
     | '/o/$occasion'
     | '/p/$slug'
+    | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account/'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -724,6 +796,8 @@ export interface RootRouteChildren {
   GiftBoxesRoute: typeof GiftBoxesRoute
   HelpRoute: typeof HelpRoute
   PrivacyRoute: typeof PrivacyRoute
+  RecipientsRoute: typeof RecipientsRoute
+  RelationshipsRoute: typeof RelationshipsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SearchRoute: typeof SearchRoute
@@ -735,6 +809,8 @@ export interface RootRouteChildren {
   CCategoryRoute: typeof CCategoryRouteWithChildren
   OOccasionRoute: typeof OOccasionRoute
   PSlugRoute: typeof PSlugRouteWithChildren
+  RRecipientRoute: typeof RRecipientRoute
+  RelRelationshipRoute: typeof RelRelationshipRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
@@ -773,6 +849,20 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relationships': {
+      id: '/relationships'
+      path: '/relationships'
+      fullPath: '/relationships'
+      preLoaderRoute: typeof RelationshipsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipients': {
+      id: '/recipients'
+      path: '/recipients'
+      fullPath: '/recipients'
+      preLoaderRoute: typeof RecipientsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -873,6 +963,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/rel/$relationship': {
+      id: '/rel/$relationship'
+      path: '/rel/$relationship'
+      fullPath: '/rel/$relationship'
+      preLoaderRoute: typeof RelRelationshipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$recipient': {
+      id: '/r/$recipient'
+      path: '/r/$recipient'
+      fullPath: '/r/$recipient'
+      preLoaderRoute: typeof RRecipientRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$slug': {
       id: '/p/$slug'
       path: '/p/$slug'
@@ -941,6 +1045,20 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/admin/reports'
       preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/relationships': {
+      id: '/admin/relationships'
+      path: '/relationships'
+      fullPath: '/admin/relationships'
+      preLoaderRoute: typeof AdminRelationshipsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/recipients': {
+      id: '/admin/recipients'
+      path: '/recipients'
+      fullPath: '/admin/recipients'
+      preLoaderRoute: typeof AdminRecipientsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/ready-boxes': {
@@ -1197,6 +1315,8 @@ interface AdminRouteChildren {
   AdminPaymentsRoute: typeof AdminPaymentsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReadyBoxesRoute: typeof AdminReadyBoxesRoute
+  AdminRecipientsRoute: typeof AdminRecipientsRoute
+  AdminRelationshipsRoute: typeof AdminRelationshipsRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminReviewsRoute: typeof AdminReviewsRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
@@ -1221,6 +1341,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPaymentsRoute: AdminPaymentsRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReadyBoxesRoute: AdminReadyBoxesRoute,
+  AdminRecipientsRoute: AdminRecipientsRoute,
+  AdminRelationshipsRoute: AdminRelationshipsRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminReviewsRoute: AdminReviewsRoute,
   AdminSecurityRoute: AdminSecurityRoute,
@@ -1265,6 +1387,8 @@ const rootRouteChildren: RootRouteChildren = {
   GiftBoxesRoute: GiftBoxesRoute,
   HelpRoute: HelpRoute,
   PrivacyRoute: PrivacyRoute,
+  RecipientsRoute: RecipientsRoute,
+  RelationshipsRoute: RelationshipsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SearchRoute: SearchRoute,
@@ -1276,6 +1400,8 @@ const rootRouteChildren: RootRouteChildren = {
   CCategoryRoute: CCategoryRouteWithChildren,
   OOccasionRoute: OOccasionRoute,
   PSlugRoute: PSlugRouteWithChildren,
+  RRecipientRoute: RRecipientRoute,
+  RelRelationshipRoute: RelRelationshipRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport

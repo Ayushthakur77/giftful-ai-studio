@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet, useRouterState, redirect } from "@tansta
 import {
   LayoutDashboard, Package, FolderTree, ShoppingCart, Users, Tags, LayoutTemplate,
   Settings, Gift, PackageOpen, PartyPopper, Sparkles, Star, Boxes, Truck,
-  CreditCard, FileBarChart, LineChart, Bell, Shield, ScrollText,
+  CreditCard, FileBarChart, LineChart, Bell, Shield, ScrollText, Users2, HeartHandshake,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,8 @@ const groups: { label: string; items: { to: string; label: string; icon: LucideI
     items: [
       { to: "/admin/products", label: "Products", icon: Package },
       { to: "/admin/categories", label: "Categories", icon: FolderTree },
+      { to: "/admin/recipients", label: "Recipients", icon: Users2 },
+      { to: "/admin/relationships", label: "Relationships", icon: HeartHandshake },
       { to: "/admin/empty-boxes", label: "Empty Boxes", icon: PackageOpen },
       { to: "/admin/ready-boxes", label: "Ready Boxes", icon: Gift },
       { to: "/admin/inventory", label: "Inventory", icon: Boxes },
