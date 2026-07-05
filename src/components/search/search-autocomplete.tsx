@@ -133,7 +133,7 @@ export function SearchAutocomplete({ className = "" }: { className?: string }) {
                   >
                     <img src={p.image} alt="" className="size-10 rounded object-cover" loading="lazy" />
                     <span className="flex-1 truncate">{p.name}</span>
-                    <span className="text-xs text-muted-foreground">{formatPricePaise(p.pricePaise)}</span>
+                    <span className="text-xs text-muted-foreground">{formatINR(p.pricePaise)}</span>
                   </Link>
                 ))
               )}
