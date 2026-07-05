@@ -1233,6 +1233,15 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _uid: string }; Returns: boolean }
+      redeem_coupon: {
+        Args: {
+          _coupon_id: string
+          _discount_paise: number
+          _order_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       validate_coupon: {
         Args: { _code: string; _subtotal_paise: number; _user_id: string }
         Returns: {
