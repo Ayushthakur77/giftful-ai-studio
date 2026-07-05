@@ -892,6 +892,72 @@ export type Database = {
           },
         ]
       }
+      product_recipients: {
+        Row: {
+          created_at: string
+          product_id: string
+          recipient_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          recipient_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          recipient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_recipients_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_recipients_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "recipients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_relationships: {
+        Row: {
+          created_at: string
+          product_id: string
+          relationship_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          relationship_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          relationship_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_relationships_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_relationships_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "relationships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
@@ -1114,6 +1180,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recipients: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
+      relationships: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          name: string
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          tagline: string | null
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          tagline?: string | null
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
       }
       reviews: {
         Row: {
