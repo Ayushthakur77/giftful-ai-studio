@@ -327,5 +327,12 @@ export const popularSearches = [
 
 export function formatINR(paise: number): string {
   const rupees = Math.round(paise) / 100;
-  return `₹${rupees.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  // Show fractional rupees when the amount is less than ₹1 or has non-zero paise
+  // so a ₹0.50 price never rounds up to a misleading "₹1".
+  const hasFraction = rupees > 0 && rupees < 1000 && rupees !== Math.floor(rupees);
+  return `₹${rupees.toLocaleString("en-IN", {
+    minimumFractionDigits: hasFraction ? 2 : 0,
+    maximumFractionDigits: hasFraction ? 2 : 0,
+  })}`;
 }
+

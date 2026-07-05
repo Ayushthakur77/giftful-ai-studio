@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { Check, ChevronLeft, ChevronRight, Plus, Minus, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Plus, Minus, X, PackageSearch } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,21 +10,16 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { PriceBlock } from "@/components/product/price-block";
+import { EmptyState } from "@/components/feedback/empty-state";
 import { AiGiftBuilderPanel, type AiBuildDraft } from "@/components/ai/ai-gift-builder-panel";
 import { AiGreetingButton } from "@/components/ai/ai-greeting-button";
 import { cn } from "@/lib/utils";
+import { formatINR, ribbons, fillers, greetingCards, findAddOn, type Product } from "@/lib/catalog";
 import {
-  emptyGiftBoxes,
-  ribbons,
-  fillers,
-  greetingCards,
-  products as allProducts,
-  formatINR,
-  findEmptyBoxBySlug,
-  findProductBySlug,
-  type Product,
-} from "@/lib/catalog";
-import { computeCart } from "@/lib/pricing";
+  listPublicEmptyBoxesFn,
+  listPublicProductsFn,
+  type PublicEmptyBox,
+} from "@/lib/public-catalog.functions";
 import { useCart } from "@/lib/store";
 
 export const Route = createFileRoute("/gift-box")({
@@ -36,6 +32,7 @@ export const Route = createFileRoute("/gift-box")({
       { title: "Build Your Own Gift Box — Giftty" },
       { name: "description", content: "Design a custom gift box in 6 easy steps, or let AI build one for you — with full editing control." },
       { property: "og:title", content: "Build Your Own Gift Box — Giftty" },
+      { property: "og:description", content: "Design your own gift box: choose a box, add products, ribbon, filler, card and note." },
     ],
   }),
   component: GiftBoxWizard,
@@ -50,13 +47,29 @@ function GiftBoxWizard() {
   const search = Route.useSearch();
   const addCustomBox = useCart((s) => s.addCustomBox);
 
+  const { data: emptyBoxes = [], isLoading: boxesLoading } = useQuery({
+    queryKey: ["public-empty-boxes"],
+    queryFn: () => listPublicEmptyBoxesFn(),
+    staleTime: 30_000,
+  });
+  const { data: compatibleProducts = [], isLoading: productsLoading } = useQuery({
+    queryKey: ["public-products", "gift-box-compatible"],
+    queryFn: () => listPublicProductsFn({ data: { giftBoxCompatibleOnly: true, limit: 120 } }),
+    staleTime: 30_000,
+  });
+
   const [step, setStep] = useState(0);
-  const [boxSlug, setBoxSlug] = useState<string | undefined>(emptyGiftBoxes[0]?.slug);
+  const [boxSlug, setBoxSlug] = useState<string | undefined>(undefined);
   const [items, setItems] = useState<Item[]>([]);
   const [ribbonSlug, setRibbonSlug] = useState(ribbons[0].slug);
   const [fillerSlug, setFillerSlug] = useState(fillers[0].slug);
   const [cardSlug, setCardSlug] = useState(greetingCards[0].slug);
   const [note, setNote] = useState("");
+
+  // Once boxes have loaded, default to the first one.
+  useEffect(() => {
+    if (!boxSlug && emptyBoxes.length > 0) setBoxSlug(emptyBoxes[0].slug);
+  }, [emptyBoxes, boxSlug]);
 
   function applyAiDraft(draft: AiBuildDraft) {
     setBoxSlug(draft.emptyBoxSlug);
@@ -68,18 +81,32 @@ function GiftBoxWizard() {
     setStep(1);
   }
 
-  const box = boxSlug ? findEmptyBoxBySlug(boxSlug) : undefined;
-  const compatibleProducts = useMemo<Product[]>(() => allProducts.filter((p) => p.isGiftBoxCompatible), []);
+  const box: PublicEmptyBox | undefined = boxSlug ? emptyBoxes.find((b) => b.slug === boxSlug) : undefined;
+  const productBySlug = useMemo(() => {
+    const map = new Map<string, Product>();
+    for (const p of compatibleProducts) map.set(p.slug, p);
+    return map;
+  }, [compatibleProducts]);
   const totalSlots = items.reduce((s, i) => s + i.quantity, 0);
   const capacityUsed = box ? Math.min(100, (totalSlots / box.capacity) * 100) : 0;
 
-  const priced = useMemo(() => {
+  // Local preview pricing (server is still source-of-truth at cart/checkout time).
+  const preview = useMemo(() => {
     if (!box) return null;
-    return computeCart([{
-      kind: "custom-box", id: "preview", emptyBoxSlug: box.slug,
-      items, ribbonSlug, fillerSlug, cardSlug, giftNote: note, quantity: 1,
-    }]);
-  }, [box, items, ribbonSlug, fillerSlug, cardSlug, note]);
+    const errors: string[] = [];
+    let subtotal = box.pricePaise;
+    for (const it of items) {
+      const p = productBySlug.get(it.productSlug);
+      if (!p) { errors.push(`Product ${it.productSlug} unavailable`); continue; }
+      if (p.stock <= 0) errors.push(`${p.name} is out of stock`);
+      subtotal += p.pricePaise * it.quantity;
+    }
+    if (totalSlots > box.capacity) errors.push(`Box holds ${box.capacity} items, you added ${totalSlots}`);
+    if (box.ribbonCompatible) subtotal += findAddOn(ribbons, ribbonSlug)?.pricePaise ?? 0;
+    if (box.fillerCompatible) subtotal += findAddOn(fillers, fillerSlug)?.pricePaise ?? 0;
+    if (box.cardCompatible) subtotal += findAddOn(greetingCards, cardSlug)?.pricePaise ?? 0;
+    return { subtotal, errors };
+  }, [box, items, ribbonSlug, fillerSlug, cardSlug, productBySlug, totalSlots]);
 
   function addItem(slug: string) {
     if (!box) return;
@@ -109,14 +136,30 @@ function GiftBoxWizard() {
 
   function handleAddToCart() {
     if (!box) return;
-    const totals = computeCart([{
-      kind: "custom-box", id: "final", emptyBoxSlug: box.slug,
-      items, ribbonSlug, fillerSlug, cardSlug, giftNote: note, quantity: 1,
-    }]);
-    if (totals.errors.length > 0) { totals.errors.forEach((e) => toast.error(e)); return; }
+    if (preview && preview.errors.length > 0) { preview.errors.forEach((e) => toast.error(e)); return; }
     addCustomBox({ emptyBoxSlug: box.slug, items, ribbonSlug, fillerSlug, cardSlug, giftNote: note });
     toast.success("Custom gift box added to cart");
     navigate({ to: "/cart" });
+  }
+
+  if (boxesLoading) {
+    return (
+      <div className="container-page py-16 text-center text-sm text-muted-foreground">
+        Loading gift boxes…
+      </div>
+    );
+  }
+
+  if (emptyBoxes.length === 0) {
+    return (
+      <div className="container-page py-16">
+        <EmptyState
+          icon={PackageSearch}
+          title="No gift boxes available yet"
+          description="Our admin is curating boxes right now. Please check back soon."
+        />
+      </div>
+    );
   }
 
   return (
@@ -129,7 +172,6 @@ function GiftBoxWizard() {
         defaultBudget={search.budget}
         onApply={applyAiDraft}
       />
-
 
       <div className="mt-4">
         <Progress value={((step + 1) / STEPS.length) * 100} />
@@ -151,14 +193,14 @@ function GiftBoxWizard() {
         <div className="min-w-0">
           {step === 0 && (
             <StepChoice
-              options={emptyGiftBoxes}
+              options={emptyBoxes}
               value={boxSlug}
               onChange={setBoxSlug}
               render={(b) => (
                 <>
                   <img src={b.image} alt="" className="aspect-video w-full rounded-md object-cover" />
                   <h3 className="mt-3 text-sm font-semibold">{b.name}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{b.description}</p>
+                  {b.description && <p className="mt-0.5 text-xs text-muted-foreground">{b.description}</p>}
                   <p className="mt-2 text-xs">Capacity: {b.capacity} slots · Max {b.maxWeightGrams}g</p>
                   <PriceBlock pricePaise={b.pricePaise} size="sm" className="mt-1" />
                 </>
@@ -172,29 +214,39 @@ function GiftBoxWizard() {
                 <p className="text-sm font-semibold">Slots used: {totalSlots} / {box.capacity}</p>
                 <p className="text-xs text-muted-foreground">Only gift-box compatible products shown</p>
               </div>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                {compatibleProducts.map((p) => {
-                  const inBox = items.find((i) => i.productSlug === p.slug);
-                  return (
-                    <div key={p.slug} className="rounded-md border border-border bg-card p-3">
-                      <img src={p.image} alt={p.name} className="aspect-square w-full rounded-md object-cover" />
-                      <h4 className="mt-2 line-clamp-2 text-sm font-medium">{p.name}</h4>
-                      <PriceBlock pricePaise={p.pricePaise} size="sm" className="mt-1" />
-                      {inBox ? (
-                        <div className="mt-2 inline-flex w-full items-center justify-between rounded-md border border-border">
-                          <Button variant="ghost" size="sm" onClick={() => decItem(p.slug)} className="h-8 w-8 rounded-r-none"><Minus className="size-3" /></Button>
-                          <span className="text-sm font-semibold">{inBox.quantity}</span>
-                          <Button variant="ghost" size="sm" onClick={() => addItem(p.slug)} className="h-8 w-8 rounded-l-none" disabled={totalSlots >= box.capacity}><Plus className="size-3" /></Button>
-                        </div>
-                      ) : (
-                        <Button size="sm" variant="secondary" className="mt-2 w-full" onClick={() => addItem(p.slug)} disabled={totalSlots >= box.capacity}>
-                          <Plus className="mr-1 size-3" /> Add
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              {productsLoading ? (
+                <p className="text-sm text-muted-foreground">Loading products…</p>
+              ) : compatibleProducts.length === 0 ? (
+                <EmptyState
+                  icon={PackageSearch}
+                  title="No gift-box compatible products yet"
+                  description="Admin can enable 'Gift builder compatible' on products to make them available here."
+                />
+              ) : (
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                  {compatibleProducts.map((p) => {
+                    const inBox = items.find((i) => i.productSlug === p.slug);
+                    return (
+                      <div key={p.slug} className="rounded-md border border-border bg-card p-3">
+                        <img src={p.image} alt={p.name} className="aspect-square w-full rounded-md object-cover" />
+                        <h4 className="mt-2 line-clamp-2 text-sm font-medium">{p.name}</h4>
+                        <PriceBlock pricePaise={p.pricePaise} size="sm" className="mt-1" />
+                        {inBox ? (
+                          <div className="mt-2 inline-flex w-full items-center justify-between rounded-md border border-border">
+                            <Button variant="ghost" size="sm" onClick={() => decItem(p.slug)} className="h-8 w-8 rounded-r-none"><Minus className="size-3" /></Button>
+                            <span className="text-sm font-semibold">{inBox.quantity}</span>
+                            <Button variant="ghost" size="sm" onClick={() => addItem(p.slug)} className="h-8 w-8 rounded-l-none" disabled={totalSlots >= box.capacity}><Plus className="size-3" /></Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="secondary" className="mt-2 w-full" onClick={() => addItem(p.slug)} disabled={totalSlots >= box.capacity || p.stock <= 0}>
+                            <Plus className="mr-1 size-3" /> {p.stock <= 0 ? "Out" : "Add"}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -227,18 +279,25 @@ function GiftBoxWizard() {
               />
               <p className="mt-1 text-xs text-muted-foreground">{note.length}/500</p>
             </div>
-
           )}
 
-          {step === 6 && priced && (
+          {step === 6 && preview && box && (
             <div>
               <h3 className="mb-3 text-sm font-semibold">Review your box</h3>
               <ul className="space-y-1 rounded-md border border-border bg-card p-4 text-sm">
-                {priced.lines[0].details?.map((d, i) => <li key={i}>• {d}</li>)}
+                <li>• Box: {box.name} — {formatINR(box.pricePaise)}</li>
+                {items.map((it) => {
+                  const p = productBySlug.get(it.productSlug);
+                  return <li key={it.productSlug}>• {it.quantity}× {p?.name ?? it.productSlug} — {formatINR((p?.pricePaise ?? 0) * it.quantity)}</li>;
+                })}
+                {box.ribbonCompatible && ribbonSlug && <li>• Ribbon: {findAddOn(ribbons, ribbonSlug)?.name}</li>}
+                {box.fillerCompatible && fillerSlug && <li>• Filler: {findAddOn(fillers, fillerSlug)?.name}</li>}
+                {box.cardCompatible && cardSlug && <li>• Card: {findAddOn(greetingCards, cardSlug)?.name}</li>}
+                {note && <li>• Note: "{note}"</li>}
               </ul>
-              {priced.errors.length > 0 && (
+              {preview.errors.length > 0 && (
                 <div className="mt-3 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
-                  {priced.errors.map((e, i) => <p key={i}>{e}</p>)}
+                  {preview.errors.map((e, i) => <p key={i}>{e}</p>)}
                 </div>
               )}
             </div>
@@ -253,7 +312,7 @@ function GiftBoxWizard() {
                 Next <ChevronRight className="ml-1 size-4" />
               </Button>
             ) : (
-              <Button size="lg" onClick={handleAddToCart} disabled={!priced || priced.errors.length > 0}>
+              <Button size="lg" onClick={handleAddToCart} disabled={!preview || preview.errors.length > 0}>
                 Add to cart
               </Button>
             )}
@@ -275,7 +334,7 @@ function GiftBoxWizard() {
           )}
           <ul className="mt-3 space-y-1.5 text-sm">
             {items.map((i) => {
-              const p = findProductBySlug(i.productSlug);
+              const p = productBySlug.get(i.productSlug);
               if (!p) return null;
               return (
                 <li key={i.productSlug} className="flex items-center justify-between gap-2">
@@ -288,11 +347,11 @@ function GiftBoxWizard() {
             })}
             {items.length === 0 && <li className="text-xs text-muted-foreground">No products added yet.</li>}
           </ul>
-          {priced && (
+          {preview && (
             <div className="mt-4 border-t border-border pt-3">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm text-muted-foreground">Box total</span>
-                <span className="text-lg font-bold price-num">{formatINR(priced.lines[0].lineSubtotalPaise)}</span>
+                <span className="text-lg font-bold price-num">{formatINR(preview.subtotal)}</span>
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">Shipping & tax added at checkout.</p>
             </div>
