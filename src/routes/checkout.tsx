@@ -94,7 +94,7 @@ function CheckoutPage() {
   const couponDiscountPaise = applied?.ok ? (applied.discountPaise ?? 0) : 0;
   const shippingPaise = applied?.shippingWaived ? 0 : baseTotals.shippingPaise;
   const discountedSubtotal = Math.max(0, baseTotals.subtotalPaise - couponDiscountPaise);
-  const taxPaise = Math.round(discountedSubtotal * 0.18);
+  const taxPaise = 0;
   const grandTotalPaise = discountedSubtotal + taxPaise + shippingPaise;
   const totals = { ...baseTotals, shippingPaise, taxPaise, grandTotalPaise };
 
@@ -310,7 +310,7 @@ function CheckoutPage() {
             {couponDiscountPaise > 0 && (
               <Row label={`Coupon (${applied?.code})`} value={`- ${formatINR(couponDiscountPaise)}`} />
             )}
-            <Row label="GST (18%)" value={formatINR(totals.taxPaise)} />
+            
             <Row
               label="Shipping"
               value={totals.shippingPaise === 0 ? "Free" : formatINR(totals.shippingPaise)}

@@ -310,9 +310,9 @@ export type CartTotals = {
   free_shipping_threshold_paise: number;
 };
 
-export const FREE_SHIPPING_THRESHOLD_PAISE = 99900; // ₹999
-export const FLAT_SHIPPING_PAISE = 9900;            // ₹99
-export const TAX_PCT = 18;
+export const FREE_SHIPPING_THRESHOLD_PAISE = 5000; // ₹50
+export const FLAT_SHIPPING_PAISE = 7000;           // ₹70
+export const TAX_PCT = 0;
 
 export function computeCart(lines: CartLine[], snap: CatalogSnapshot = EMPTY_SNAPSHOT): CartTotals {
   const priced = lines.map((l) => priceLine(l, snap));

@@ -161,7 +161,7 @@ function OrderDetailPage() {
             <Row label="Subtotal" value={formatINR(order.subtotal_paise)} />
             {order.discount_paise > 0 && <Row label="Discount" value={`− ${formatINR(order.discount_paise)}`} />}
             <Row label="Shipping" value={order.shipping_paise === 0 ? "Free" : formatINR(order.shipping_paise)} />
-            <Row label="GST (18%)" value={formatINR(order.tax_paise)} />
+            {order.tax_paise > 0 && <Row label="Tax" value={formatINR(order.tax_paise)} />}
             <div className="mt-1 flex items-baseline justify-between border-t border-border pt-2">
               <span className="text-base font-bold">Grand total</span>
               <span className="text-lg font-bold">{formatINR(order.grand_total_paise)}</span>

@@ -138,7 +138,7 @@ function CartPage() {
 
           <dl className="grid gap-2 text-sm price-num">
             <Row label="Subtotal" value={formatINR(totals.subtotalPaise)} />
-            <Row label={`Tax (${5}%)`} value={formatINR(totals.taxPaise)} />
+            
             <Row
               label="Shipping"
               value={totals.shippingPaise === 0 ? "Free" : formatINR(totals.shippingPaise)}
