@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart, useWishlist } from "@/lib/store";
 import { computeCartTotalsFn } from "@/lib/catalog.functions";
 import { type CartTotals } from "@/lib/pricing";
-import { formatINR } from "@/lib/company";
+import { formatINR } from "@/lib/catalog";
 
 export const Route = createFileRoute("/cart")({
   head: () => ({ meta: [{ title: "Your cart — Giftty" }, { name: "robots", content: "noindex" }] }),
