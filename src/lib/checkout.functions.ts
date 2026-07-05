@@ -74,7 +74,7 @@ export const placeCodOrderFn = createServerFn({ method: "POST" })
       couponId = row.coupon_id;
     }
     const discountedSubtotal = Math.max(0, base.subtotalPaise - couponDiscountPaise);
-    const taxPaise = Math.round(discountedSubtotal * 0.18);
+    const taxPaise = 0;
     const grandTotalPaise = discountedSubtotal + taxPaise + shippingPaise;
 
     const email = (context.claims as { email?: string })?.email ?? "";
