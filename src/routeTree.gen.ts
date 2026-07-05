@@ -14,6 +14,7 @@ import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RelationshipsRouteImport } from './routes/relationships'
 import { Route as RecipientsRouteImport } from './routes/recipients'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HelpRouteImport } from './routes/help'
@@ -95,6 +96,11 @@ const ReturnsRoute = ReturnsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RelationshipsRoute = RelationshipsRouteImport.update({
+  id: '/relationships',
+  path: '/relationships',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipientsRoute = RecipientsRouteImport.update({
@@ -399,6 +405,7 @@ export interface FileRoutesByFullPath {
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -462,6 +469,7 @@ export interface FileRoutesByTo {
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -527,6 +535,7 @@ export interface FileRoutesById {
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
   '/recipients': typeof RecipientsRoute
+  '/relationships': typeof RelationshipsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -593,6 +602,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/privacy'
     | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -656,6 +666,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/privacy'
     | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -720,6 +731,7 @@ export interface FileRouteTypes {
     | '/help'
     | '/privacy'
     | '/recipients'
+    | '/relationships'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -785,6 +797,7 @@ export interface RootRouteChildren {
   HelpRoute: typeof HelpRoute
   PrivacyRoute: typeof PrivacyRoute
   RecipientsRoute: typeof RecipientsRoute
+  RelationshipsRoute: typeof RelationshipsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SearchRoute: typeof SearchRoute
@@ -836,6 +849,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/relationships': {
+      id: '/relationships'
+      path: '/relationships'
+      fullPath: '/relationships'
+      preLoaderRoute: typeof RelationshipsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipients': {
@@ -1368,6 +1388,7 @@ const rootRouteChildren: RootRouteChildren = {
   HelpRoute: HelpRoute,
   PrivacyRoute: PrivacyRoute,
   RecipientsRoute: RecipientsRoute,
+  RelationshipsRoute: RelationshipsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SearchRoute: SearchRoute,
