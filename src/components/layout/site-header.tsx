@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { listNotificationsFn, markAllNotificationsReadFn, unreadNotificationsCountFn } from "@/lib/notifications.functions";
-import { categories as navCategories } from "@/lib/catalog";
+import { listPublicCategoriesFn } from "@/lib/public-catalog.functions";
 import { useCart, useWishlist } from "@/lib/store";
 
 
@@ -40,6 +40,12 @@ export function SiteHeader() {
     refetchInterval: 60_000,
   });
   const unreadCount = unread?.count ?? 0;
+
+  const { data: dbCategories = [] } = useQuery({
+    queryKey: ["public-categories"],
+    queryFn: () => listPublicCategoriesFn(),
+    staleTime: 60_000,
+  });
 
   async function handleSignOut() {
     await qc.cancelQueries();
@@ -230,7 +236,7 @@ export function SiteHeader() {
       {/* Mobile category chips */}
       <div className="border-t border-border bg-background md:hidden">
         <div className="flex gap-2 overflow-x-auto px-4 py-2 hide-scrollbar">
-          {navCategories.map((c) => (
+          {dbCategories.map((c: { slug: string; name: string }) => (
             <Link
               key={c.slug}
               to="/c/$category"
