@@ -58,6 +58,15 @@ function CartPage() {
     );
   }
 
+  if (!totals) {
+    return (
+      <div className="container-page py-8 md:py-12">
+        <h1 className="font-display text-2xl font-bold md:text-3xl">Your cart</h1>
+        <p className="mt-4 text-sm text-muted-foreground">{loadingTotals ? "Calculating totals…" : "Preparing your cart…"}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container-page py-6 md:py-10">
       <h1 className="font-display text-2xl font-bold md:text-3xl">Your cart</h1>
