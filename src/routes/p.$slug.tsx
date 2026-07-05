@@ -15,6 +15,8 @@ import { useCart, useWishlist, pushRecentlyViewed } from "@/lib/store";
 import { PersonalizationForm, type PersonalizationValues } from "@/components/product/personalization-form";
 import { checkPincodeFn } from "@/lib/catalog.functions";
 import { getPublicProductBySlugFn } from "@/lib/public-catalog.functions";
+import { getRecommendationsFn } from "@/lib/discovery.functions";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/p/$slug")({
