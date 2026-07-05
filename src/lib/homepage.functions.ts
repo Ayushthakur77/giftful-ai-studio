@@ -249,5 +249,23 @@ export const getHomepageLayoutFn = createServerFn({ method: "GET" }).handler(asy
   });
 
   const resolved = await Promise.all(active.map((s) => resolveSection(sb, s)));
+
+  // Always ensure products are visible on the homepage.
+  const productKinds = new Set(["featured", "trending", "best_sellers", "new_arrivals", "product_showcase"]);
+  const hasProductRail = resolved.some((s) => productKinds.has(s.kind));
+  if (!hasProductRail) {
+    const products = await fetchProducts(sb, null, 12);
+    if (products.length) {
+      resolved.push({
+        id: "default-product-showcase",
+        kind: "product_showcase",
+        title: "Shop our gifts",
+        subtitle: "Curated picks for every moment",
+        config: { limit: 12 },
+        data: { products },
+      });
+    }
+  }
+
   return resolved;
 });
