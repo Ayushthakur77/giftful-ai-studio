@@ -6,10 +6,15 @@ import { TrustStrip } from "@/components/marketing/trust-strip";
 import { OccasionTile } from "@/components/marketing/occasion-tile";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
+import { PriceBlock } from "@/components/product/price-block";
 import { Button } from "@/components/ui/button";
 import { AiHomeRails } from "@/components/ai/ai-home-rail";
 import { occasions, recipients, boxBuilderImage } from "@/lib/catalog";
-import { listPublicProductsFn } from "@/lib/public-catalog.functions";
+import {
+  listPublicProductsFn,
+  listPublicCategoriesFn,
+  listPublicReadyBoxesFn,
+} from "@/lib/public-catalog.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,11 +51,25 @@ function HomePage() {
   const trendingQ = useProducts("trending");
   const bestQ = useProducts("best_seller");
   const featuredQ = useProducts("featured");
+  const newArrivalsQ = useProducts("new_arrival");
+  const categoriesQ = useQuery({
+    queryKey: ["public-categories-home"],
+    queryFn: () => listPublicCategoriesFn(),
+    staleTime: 60_000,
+  });
+  const readyBoxesQ = useQuery({
+    queryKey: ["public-ready-boxes-home"],
+    queryFn: () => listPublicReadyBoxesFn(),
+    staleTime: 60_000,
+  });
 
   const products = all.data ?? [];
   const trending = trendingQ.data ?? [];
   const bestSellers = bestQ.data ?? [];
   const featured = featuredQ.data ?? [];
+  const newArrivals = newArrivalsQ.data ?? [];
+  const categories = (categoriesQ.data ?? []).filter((c: any) => c.show_on_home !== false);
+  const readyBoxes = readyBoxesQ.data ?? [];
 
 
   return (
@@ -80,6 +99,29 @@ function HomePage() {
           ))}
         </div>
       </section>
+
+      {categories.length > 0 && (
+        <section className="container-page py-8 md:py-10">
+          <SectionHeader title="Shop by category" ctaLabel="Browse all" ctaTo="/search" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 md:gap-4">
+            {categories.slice(0, 12).map((c: any) => (
+              <Link
+                key={c.slug}
+                to="/c/$category"
+                params={{ category: c.slug }}
+                className="group flex aspect-square flex-col items-center justify-center gap-2 rounded-md border border-border bg-card p-3 text-center transition-shadow hover:shadow-sm"
+              >
+                {c.icon_url ? (
+                  <img src={c.icon_url} alt="" className="h-12 w-12 rounded-full object-cover" loading="lazy" />
+                ) : (
+                  <span className="text-3xl" aria-hidden>🎁</span>
+                )}
+                <span className="text-xs font-medium text-foreground md:text-sm">{c.name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <AiHomeRails />
 
@@ -142,6 +184,35 @@ function HomePage() {
           {bestSellers.map((p) => <ProductCard key={p.slug} product={p} />)}
         </ProductRail>
       )}
+
+      {newArrivals.length > 0 && (
+        <ProductRail title="New arrivals" subtitle="Fresh in the store" ctaLabel="See all" ctaTo="/search">
+          {newArrivals.map((p) => <ProductCard key={p.slug} product={p} />)}
+        </ProductRail>
+      )}
+
+      {readyBoxes.length > 0 && (
+        <section className="container-page py-8 md:py-10">
+          <SectionHeader title="Ready-made gift boxes" subtitle="Curated hampers, packed and ready" ctaLabel="Shop boxes" ctaTo="/gift-boxes" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4">
+            {readyBoxes.slice(0, 8).map((b: any) => (
+              <Link
+                key={b.slug}
+                to="/gift-boxes"
+                className="group flex flex-col gap-2 rounded-md border border-border bg-card p-3 transition-shadow hover:shadow-sm"
+              >
+                <div className="aspect-square overflow-hidden rounded-md bg-muted">
+                  <img src={b.image} alt={b.name} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
+                </div>
+                <p className="line-clamp-2 text-sm font-medium">{b.name}</p>
+                <PriceBlock pricePaise={b.pricePaise} mrpPaise={b.mrpPaise} size="sm" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+
 
 
       <section className="container-page py-8 md:py-12">
