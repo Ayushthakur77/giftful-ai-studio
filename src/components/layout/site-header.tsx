@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { listNotificationsFn, markAllNotificationsReadFn, unreadNotificationsCountFn } from "@/lib/notifications.functions";
 import { listPublicCategoriesFn } from "@/lib/public-catalog.functions";
 import { useCart, useWishlist } from "@/lib/store";
+import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 
 
 
