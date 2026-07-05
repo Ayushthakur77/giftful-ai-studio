@@ -3,8 +3,8 @@ import { z } from "zod";
 import { createHmac, timingSafeEqual } from "crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeCart, type CartLine } from "./pricing";
+import { loadCatalogSnapshot } from "./catalog-repo.server";
 import { computeCouponDiscount } from "./coupons.functions";
-import { COMPANY } from "./company";
 
 const personalizationSchema = z.record(z.string(), z.string().max(500)).optional();
 
@@ -20,13 +20,13 @@ const cartLineSchema = z.discriminatedUnion("kind", [
 ]);
 
 /**
- * Server-authoritative pricing that also applies a coupon.
- * Returns final totals + coupon metadata.
+ * Server-authoritative pricing + coupon evaluation.
  */
 async function computeTotalsWithCoupon(
   supabase: any, userId: string, lines: CartLine[], couponCode?: string,
 ) {
-  const base = computeCart(lines);
+  const snap = await loadCatalogSnapshot(lines);
+  const base = computeCart(lines, snap);
   let couponDiscountPaise = 0;
   let shippingPaise = base.shippingPaise;
   let couponId: string | null = null;
@@ -54,27 +54,17 @@ async function computeTotalsWithCoupon(
     }
   }
 
-  // Recompute tax + grand total after coupon
   const discountedSubtotal = Math.max(0, base.subtotalPaise - couponDiscountPaise);
   const taxPaise = Math.round(discountedSubtotal * 0.18);
   const grandTotalPaise = discountedSubtotal + taxPaise + shippingPaise;
 
   return {
-    base,
-    couponError,
-    couponId,
+    base, couponError, couponId,
     couponCode: couponCode?.toUpperCase() ?? null,
-    couponDiscountPaise,
-    shippingPaise,
-    taxPaise,
-    grandTotalPaise,
+    couponDiscountPaise, shippingPaise, taxPaise, grandTotalPaise,
   };
 }
 
-/**
- * Snapshot current cart into a `pending` order + create a Razorpay order.
- * Returns the info the browser needs to open Checkout.js.
- */
 export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({
@@ -88,8 +78,12 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!keyId || !keySecret) return { ok: false as const, error: "Payment provider is not configured" };
 
+    // Defense-in-depth: explicit ownership check on top of addresses RLS.
     const { data: addr } = await context.supabase
-      .from("addresses").select("*").eq("id", data.addressId).maybeSingle();
+      .from("addresses").select("*")
+      .eq("id", data.addressId)
+      .eq("user_id", context.userId)
+      .maybeSingle();
     if (!addr) return { ok: false as const, error: "Address not found" };
 
     const totals = await computeTotalsWithCoupon(context.supabase, context.userId, data.lines as CartLine[], data.couponCode);
@@ -129,7 +123,6 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
       .select("id, order_number").single();
     if (orderErr || !order) return { ok: false as const, error: orderErr?.message ?? "Failed to create order" };
 
-    // Snapshot items
     const itemsPayload = totals.base.lines.map((l, i) => {
       const raw = data.lines[i];
       let slug = "";
@@ -145,7 +138,6 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
     });
     await context.supabase.from("order_items").insert(itemsPayload);
 
-    // Create Razorpay order via REST
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
       method: "POST",
@@ -158,7 +150,6 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
     });
     if (!rzpRes.ok) {
       const txt = await rzpRes.text();
-      // Rollback
       await context.supabase.from("orders").delete().eq("id", order.id);
       return { ok: false as const, error: `Razorpay: ${txt.slice(0, 200)}` };
     }
@@ -186,7 +177,12 @@ export const initiateRazorpayCheckoutFn = createServerFn({ method: "POST" })
   });
 
 /**
- * Verify Razorpay signature client-side callback and mark order paid.
+ * Verify Razorpay signature and mark the order paid.
+ *
+ * Delegates the actual state mutation (invoice, coupon, notification,
+ * history, order status) to `processSuccessfulPayment` — the same
+ * function the webhook calls — so the two paths cannot diverge and
+ * running both is idempotent.
  */
 export const verifyRazorpayPaymentFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -210,65 +206,23 @@ export const verifyRazorpayPaymentFn = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Invalid payment signature" };
     }
 
+    // 2. Ownership check via admin client (RLS on orders scopes user reads).
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    // 2. Load order (must be owned by user and pending)
     const { data: order } = await supabaseAdmin
-      .from("orders").select("*").eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
+      .from("orders").select("id, order_number, user_id, payment_status")
+      .eq("id", data.orderId).eq("user_id", context.userId).maybeSingle();
     if (!order) return { ok: false as const, error: "Order not found" };
-    if (order.payment_status === "paid") {
-      return { ok: true as const, orderId: order.id, orderNumber: order.order_number };
-    }
 
-    // 3. Update payment row
+    // 3. Record signature on the payment row.
     await supabaseAdmin.from("payments").update({
-      provider_payment_id: data.razorpay_payment_id,
       provider_signature: data.razorpay_signature,
-      status: "captured",
     }).eq("order_id", order.id).eq("provider_order_id", data.razorpay_order_id);
 
-    // 4. Update order
-    await supabaseAdmin.from("orders").update({
-      status: "confirmed",
-      payment_status: "paid",
-    }).eq("id", order.id);
-
-    // 5. Redeem coupon
-    if (order.coupon_code && order.coupon_discount_paise > 0) {
-      const { data: coupon } = await supabaseAdmin
-        .from("coupons").select("id, usage_count").eq("code", order.coupon_code).maybeSingle();
-      if (coupon) {
-        await supabaseAdmin.from("coupon_redemptions").insert({
-          coupon_id: coupon.id, user_id: context.userId,
-          order_id: order.id, discount_paise: order.coupon_discount_paise,
-        });
-        await supabaseAdmin.from("coupons").update({ usage_count: (coupon.usage_count ?? 0) + 1 }).eq("id", coupon.id);
-      }
-    }
-
-    // 6. Invoice
-    await supabaseAdmin.from("invoices").insert({
-      order_id: order.id, user_id: context.userId,
-      subtotal_paise: order.subtotal_paise,
-      discount_paise: (order.discount_paise ?? 0) + (order.coupon_discount_paise ?? 0),
-      shipping_paise: order.shipping_paise,
-      tax_paise: order.tax_paise,
-      grand_total_paise: order.grand_total_paise,
-      billing_address: order.shipping_address,
-      shipping_address: order.shipping_address,
-      seller: JSON.parse(JSON.stringify(COMPANY)),
-    });
-
-    // 7. History + notification
-    await supabaseAdmin.from("order_status_history").insert([
-      { order_id: order.id, status: "confirmed", note: "Payment received via Razorpay" },
-    ]);
-    await supabaseAdmin.from("notifications").insert({
-      user_id: context.userId,
-      type: "payment_success",
-      title: `Payment received · ${order.order_number}`,
-      body: `Your payment of ₹${(order.grand_total_paise / 100).toFixed(2)} was successful.`,
-      link: `/account/orders/${order.id}`,
+    // 4. Delegate the rest to the shared idempotent processor.
+    const { processSuccessfulPayment } = await import("./payment-processing.server");
+    await processSuccessfulPayment({
+      orderId: order.id,
+      captured: { provider_payment_id: data.razorpay_payment_id },
     });
 
     return { ok: true as const, orderId: order.id, orderNumber: order.order_number };
