@@ -108,7 +108,7 @@ function CartPage() {
                     </div>
                     <p className="text-sm font-bold price-num">{formatINR(line.lineSubtotalPaise)}</p>
                   </div>
-                  {productSlug && findProductBySlug(productSlug) && (
+                  {productSlug && (
                     <button
                       onClick={() => { addWishlist(productSlug); remove(line.id); toast.success("Moved to wishlist"); }}
                       className="mt-1 inline-flex w-fit items-center gap-1 text-xs font-semibold text-primary hover:underline"
