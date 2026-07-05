@@ -15,6 +15,8 @@ import { useCart, useWishlist, pushRecentlyViewed } from "@/lib/store";
 import { PersonalizationForm, type PersonalizationValues } from "@/components/product/personalization-form";
 import { checkPincodeFn } from "@/lib/catalog.functions";
 import { getPublicProductBySlugFn } from "@/lib/public-catalog.functions";
+import { getRecommendationsFn } from "@/lib/discovery.functions";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/p/$slug")({
@@ -238,7 +240,24 @@ function ProductPage() {
           {related.slice(0, 5).map((p: Product) => <ProductCard key={p.slug} product={p} />)}
         </ProductRail>
       )}
+
+      <TrendingRail excludeSlug={product.slug} />
     </div>
+  );
+}
+
+function TrendingRail({ excludeSlug }: { excludeSlug: string }) {
+  const q = useQuery({
+    queryKey: ["recs", "trending", excludeSlug],
+    queryFn: () => getRecommendationsFn({ data: { kind: "trending", excludeSlug, limit: 10 } }),
+    staleTime: 60_000,
+  });
+  const items = q.data ?? [];
+  if (items.length === 0) return null;
+  return (
+    <ProductRail title="Trending picks" ctaLabel="Browse all" ctaTo="/search">
+      {items.slice(0, 8).map((p: Product) => <ProductCard key={p.slug} product={p} />)}
+    </ProductRail>
   );
 }
 
