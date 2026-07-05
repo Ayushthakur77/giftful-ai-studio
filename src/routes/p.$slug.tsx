@@ -229,8 +229,8 @@ function ProductPage() {
               </div>
             </dl>
           </TabsContent>
-          <TabsContent value="reviews" className="pt-4 text-sm text-muted-foreground">
-            Verified customer reviews will appear here in Phase 6.
+          <TabsContent value="reviews" className="pt-4">
+            <ReviewsSection productSlug={product.slug} />
           </TabsContent>
         </Tabs>
       </div>
