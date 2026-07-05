@@ -35,6 +35,8 @@ const groups: { label: string; items: { to: string; label: string; icon: LucideI
     items: [
       { to: "/admin/products", label: "Products", icon: Package },
       { to: "/admin/categories", label: "Categories", icon: FolderTree },
+      { to: "/admin/recipients", label: "Recipients", icon: Users2 },
+      { to: "/admin/relationships", label: "Relationships", icon: HeartHandshake },
       { to: "/admin/empty-boxes", label: "Empty Boxes", icon: PackageOpen },
       { to: "/admin/ready-boxes", label: "Ready Boxes", icon: Gift },
       { to: "/admin/inventory", label: "Inventory", icon: Boxes },
