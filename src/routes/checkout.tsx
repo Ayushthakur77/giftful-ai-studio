@@ -310,7 +310,7 @@ function CheckoutPage() {
             {couponDiscountPaise > 0 && (
               <Row label={`Coupon (${applied?.code})`} value={`- ${formatINR(couponDiscountPaise)}`} />
             )}
-            <Row label="GST (18%)" value={formatINR(totals.taxPaise)} />
+            
             <Row
               label="Shipping"
               value={totals.shippingPaise === 0 ? "Free" : formatINR(totals.shippingPaise)}
