@@ -30,6 +30,20 @@ export const Route = createFileRoute("/p/$slug")({
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [{ title: "Product not found — Giftty" }, { name: "robots", content: "noindex" }] };
     const p = loaderData.product;
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.name,
+      description: p.shortDescription || p.description,
+      image: p.gallery,
+      sku: p.sku,
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: (p.pricePaise / 100).toFixed(2),
+        availability: p.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      },
+    };
     return {
       meta: [
         { title: `${p.name} — Giftty` },
@@ -38,6 +52,11 @@ export const Route = createFileRoute("/p/$slug")({
         { property: "og:description", content: p.shortDescription },
         { property: "og:image", content: p.image },
         { property: "og:type", content: "product" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: p.image },
+      ],
+      scripts: [
+        { type: "application/ld+json", children: JSON.stringify(jsonLd) },
       ],
     };
   },
