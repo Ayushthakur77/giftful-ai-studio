@@ -40,10 +40,12 @@ export async function processSuccessfulPayment(input: PaymentSuccessInput): Prom
   if (order.payment_status === "paid") return;
 
   // 2. Update payment row (best-effort — the caller may have done this).
-  const patch: Record<string, unknown> = { status: "captured" };
-  if (input.captured?.provider_payment_id) patch.provider_payment_id = input.captured.provider_payment_id;
-  if (input.captured?.method) patch.method = input.captured.method;
-  if (input.captured?.raw_response !== undefined) patch.raw_response = input.captured.raw_response;
+  const patch = {
+    status: "captured" as const,
+    ...(input.captured?.provider_payment_id ? { provider_payment_id: input.captured.provider_payment_id } : {}),
+    ...(input.captured?.method ? { method: input.captured.method } : {}),
+    ...(input.captured?.raw_response !== undefined ? { raw_response: input.captured.raw_response as any } : {}),
+  };
   if (input.paymentRowId) {
     await supabaseAdmin.from("payments").update(patch).eq("id", input.paymentRowId);
   } else {
