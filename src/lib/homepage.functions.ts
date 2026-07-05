@@ -268,7 +268,6 @@ export const getHomepageLayoutFn = createServerFn({ method: "GET" }).handler(asy
   const hasProductRail = resolved.some((s) => productKinds.has(s.kind));
   if (!hasProductRail) {
     const products = await fetchProducts(sb, null, 12);
-    console.log("[homepage] product fallback", products.length, products[0]?.name);
     if (products.length) {
       resolved.push({
         id: "default-product-showcase",
@@ -281,6 +280,5 @@ export const getHomepageLayoutFn = createServerFn({ method: "GET" }).handler(asy
     }
   }
 
-  console.log("[homepage] resolved", resolved.length, resolved.map((s) => s.kind));
   return resolved;
 });
