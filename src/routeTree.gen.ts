@@ -14,6 +14,7 @@ import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RecipientsRouteImport } from './routes/recipients'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as GiftBoxesRouteImport } from './routes/gift-boxes'
@@ -94,6 +95,11 @@ const ReturnsRoute = ReturnsRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipientsRoute = RecipientsRouteImport.update({
+  id: '/recipients',
+  path: '/recipients',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -454,6 +461,7 @@ export interface FileRoutesByTo {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -518,6 +526,7 @@ export interface FileRoutesById {
   '/gift-boxes': typeof GiftBoxesRoute
   '/help': typeof HelpRoute
   '/privacy': typeof PrivacyRoute
+  '/recipients': typeof RecipientsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -583,6 +592,7 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -645,6 +655,7 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -708,6 +719,7 @@ export interface FileRouteTypes {
     | '/gift-boxes'
     | '/help'
     | '/privacy'
+    | '/recipients'
     | '/reset-password'
     | '/returns'
     | '/search'
@@ -772,6 +784,7 @@ export interface RootRouteChildren {
   GiftBoxesRoute: typeof GiftBoxesRoute
   HelpRoute: typeof HelpRoute
   PrivacyRoute: typeof PrivacyRoute
+  RecipientsRoute: typeof RecipientsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ReturnsRoute: typeof ReturnsRoute
   SearchRoute: typeof SearchRoute
@@ -823,6 +836,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recipients': {
+      id: '/recipients'
+      path: '/recipients'
+      fullPath: '/recipients'
+      preLoaderRoute: typeof RecipientsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -1347,6 +1367,7 @@ const rootRouteChildren: RootRouteChildren = {
   GiftBoxesRoute: GiftBoxesRoute,
   HelpRoute: HelpRoute,
   PrivacyRoute: PrivacyRoute,
+  RecipientsRoute: RecipientsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ReturnsRoute: ReturnsRoute,
   SearchRoute: SearchRoute,
