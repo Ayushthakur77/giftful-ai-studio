@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock } from "lucide-react";
+import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock, Cake, Heart, Flower2, Gift, Lamp, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceBlock } from "@/components/product/price-block";
