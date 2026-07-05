@@ -54,6 +54,7 @@ const groups: { label: string; items: { to: string; label: string; icon: LucideI
     label: "Content",
     items: [
       { to: "/admin/homepage-builder", label: "Homepage", icon: LayoutTemplate },
+      { to: "/admin/testimonials", label: "Testimonials", icon: Star },
       { to: "/admin/festivals", label: "Festivals", icon: PartyPopper },
       { to: "/admin/ai", label: "AI", icon: Sparkles },
     ],

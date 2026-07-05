@@ -61,7 +61,7 @@ function NotFound() {
   return (
     <div className="container-page py-16 text-center">
       <h1 className="font-display text-2xl font-bold">Relationship not found</h1>
-      <p className="mt-2 text-muted-foreground">Try browsing <Link to="/shop" className="underline">all gifts</Link>.</p>
+      <p className="mt-2 text-muted-foreground">Try browsing <Link to="/search" className="underline">all gifts</Link>.</p>
     </div>
   );
 }
