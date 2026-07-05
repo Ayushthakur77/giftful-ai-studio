@@ -28,6 +28,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountIndexRouteImport } from './routes/account.index'
+import { Route as RelRelationshipRouteImport } from './routes/rel.$relationship'
 import { Route as RRecipientRouteImport } from './routes/r.$recipient'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as OOccasionRouteImport } from './routes/o.$occasion'
@@ -164,6 +165,11 @@ const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AccountRoute,
+} as any)
+const RelRelationshipRoute = RelRelationshipRouteImport.update({
+  id: '/rel/$relationship',
+  path: '/rel/$relationship',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RRecipientRoute = RRecipientRouteImport.update({
   id: '/r/$recipient',
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
   '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
   '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -552,6 +560,7 @@ export interface FileRoutesById {
   '/o/$occasion': typeof OOccasionRoute
   '/p/$slug': typeof PSlugRouteWithChildren
   '/r/$recipient': typeof RRecipientRoute
+  '/rel/$relationship': typeof RelRelationshipRoute
   '/account/': typeof AccountIndexRoute
   '/account/orders/$id': typeof AccountOrdersIdRoute
   '/api/public/razorpay-webhook': typeof ApiPublicRazorpayWebhookRoute
@@ -616,6 +625,7 @@ export interface FileRouteTypes {
     | '/o/$occasion'
     | '/p/$slug'
     | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account/'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -677,6 +687,7 @@ export interface FileRouteTypes {
     | '/o/$occasion'
     | '/p/$slug'
     | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -739,6 +750,7 @@ export interface FileRouteTypes {
     | '/o/$occasion'
     | '/p/$slug'
     | '/r/$recipient'
+    | '/rel/$relationship'
     | '/account/'
     | '/account/orders/$id'
     | '/api/public/razorpay-webhook'
@@ -772,6 +784,7 @@ export interface RootRouteChildren {
   OOccasionRoute: typeof OOccasionRoute
   PSlugRoute: typeof PSlugRouteWithChildren
   RRecipientRoute: typeof RRecipientRoute
+  RelRelationshipRoute: typeof RelRelationshipRoute
   ApiPublicRazorpayWebhookRoute: typeof ApiPublicRazorpayWebhookRoute
 }
 
@@ -909,6 +922,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/'
       preLoaderRoute: typeof AccountIndexRouteImport
       parentRoute: typeof AccountRoute
+    }
+    '/rel/$relationship': {
+      id: '/rel/$relationship'
+      path: '/rel/$relationship'
+      fullPath: '/rel/$relationship'
+      preLoaderRoute: typeof RelRelationshipRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/r/$recipient': {
       id: '/r/$recipient'
@@ -1339,6 +1359,7 @@ const rootRouteChildren: RootRouteChildren = {
   OOccasionRoute: OOccasionRoute,
   PSlugRoute: PSlugRouteWithChildren,
   RRecipientRoute: RRecipientRoute,
+  RelRelationshipRoute: RelRelationshipRoute,
   ApiPublicRazorpayWebhookRoute: ApiPublicRazorpayWebhookRoute,
 }
 export const routeTree = rootRouteImport
