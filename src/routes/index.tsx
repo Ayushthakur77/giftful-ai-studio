@@ -100,6 +100,29 @@ function HomePage() {
         </div>
       </section>
 
+      {categories.length > 0 && (
+        <section className="container-page py-8 md:py-10">
+          <SectionHeader title="Shop by category" ctaLabel="Browse all" ctaTo="/search" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 md:gap-4">
+            {categories.slice(0, 12).map((c: any) => (
+              <Link
+                key={c.slug}
+                to="/c/$category"
+                params={{ category: c.slug }}
+                className="group flex aspect-square flex-col items-center justify-center gap-2 rounded-md border border-border bg-card p-3 text-center transition-shadow hover:shadow-sm"
+              >
+                {c.icon_url ? (
+                  <img src={c.icon_url} alt="" className="h-12 w-12 rounded-full object-cover" loading="lazy" />
+                ) : (
+                  <span className="text-3xl" aria-hidden>🎁</span>
+                )}
+                <span className="text-xs font-medium text-foreground md:text-sm">{c.name}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <AiHomeRails />
 
       {all.isLoading ? (
