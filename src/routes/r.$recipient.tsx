@@ -68,7 +68,7 @@ function NotFound() {
   return (
     <div className="container-page py-16 text-center">
       <h1 className="font-display text-2xl font-bold">Recipient not found</h1>
-      <p className="mt-2 text-muted-foreground">Try browsing all our <Link to="/shop" className="underline">gifts</Link>.</p>
+      <p className="mt-2 text-muted-foreground">Try browsing all our <Link to="/search" className="underline">gifts</Link>.</p>
     </div>
   );
 }
