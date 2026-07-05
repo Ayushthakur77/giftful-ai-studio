@@ -72,7 +72,7 @@ export const listProductsByRecipientFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) =>
     z.object({ slug: z.string(), limit: z.number().int().min(1).max(120).default(60) }).parse(raw),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<TaxonomyProduct[]> => {
     const sb = publicClient();
     const { data: rec } = await sb.from("recipients").select("id").eq("slug", data.slug).eq("visible", true).maybeSingle();
     if (!rec) return [];
@@ -80,9 +80,9 @@ export const listProductsByRecipientFn = createServerFn({ method: "GET" })
       .select("products(id,slug,sku,name,description,price_paise,offer_price_paise,stock,images,is_featured,is_trending,is_new_arrival,is_best_seller,status)")
       .eq("recipient_id", rec.id)
       .limit(data.limit);
-    return ((rows ?? []) as { products: Record<string, unknown> | null }[])
+    return ((rows ?? []) as { products: TaxonomyProduct | null }[])
       .map((r) => r.products)
-      .filter((p): p is Record<string, unknown> => p !== null && (p as { status?: string }).status === "active");
+      .filter((p): p is TaxonomyProduct => p !== null && p.status === "active");
   });
 
 // ===================================================================
