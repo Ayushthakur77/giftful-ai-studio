@@ -41,11 +41,28 @@ export type TaxonomyProduct = {
   id: string; slug: string; sku: string | null; name: string;
   description: string | null;
   price_paise: number; offer_price_paise: number | null;
+  stock: number; images: string[];
+  is_featured: boolean; is_trending: boolean;
+  is_new_arrival: boolean; is_best_seller: boolean;
+  status: string;
+};
+
+type DbRel = {
+  id: string; slug: string; sku: string | null; name: string;
+  description: string | null;
+  price_paise: number; offer_price_paise: number | null;
   stock: number; images: unknown;
   is_featured: boolean; is_trending: boolean;
   is_new_arrival: boolean; is_best_seller: boolean;
   status: string;
 };
+
+function normalizeProduct(p: DbRel): TaxonomyProduct {
+  const images = Array.isArray(p.images)
+    ? (p.images as unknown[]).filter((x): x is string => typeof x === "string")
+    : [];
+  return { ...p, images };
+}
 
 // ===================================================================
 // PUBLIC — Recipients
