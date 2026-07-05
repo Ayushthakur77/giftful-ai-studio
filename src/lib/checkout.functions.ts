@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { computeCart, type CartLine } from "./pricing";
+import { loadCatalogSnapshot } from "./catalog-repo.server";
 import { computeCouponDiscount } from "./coupons.functions";
 import { COMPANY } from "./company";
 
