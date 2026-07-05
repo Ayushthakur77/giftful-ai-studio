@@ -121,7 +121,7 @@ export function ShopBrowser({
         {/* Toolbar */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-muted-foreground">
-            {results.length} {results.length === 1 ? "product" : "products"}
+            {productsQuery.isLoading ? "Loading…" : `${total} ${total === 1 ? "product" : "products"}`}
           </p>
           <div className="flex items-center gap-2">
             <Sheet>
