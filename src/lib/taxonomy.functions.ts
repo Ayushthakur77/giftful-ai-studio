@@ -97,9 +97,10 @@ export const listProductsByRecipientFn = createServerFn({ method: "GET" })
       .select("products(id,slug,sku,name,description,price_paise,offer_price_paise,stock,images,is_featured,is_trending,is_new_arrival,is_best_seller,status)")
       .eq("recipient_id", rec.id)
       .limit(data.limit);
-    return ((rows ?? []) as { products: TaxonomyProduct | null }[])
+    return ((rows ?? []) as { products: DbRel | null }[])
       .map((r) => r.products)
-      .filter((p): p is TaxonomyProduct => p !== null && p.status === "active");
+      .filter((p): p is DbRel => p !== null && p.status === "active")
+      .map(normalizeProduct);
   });
 
 // ===================================================================
