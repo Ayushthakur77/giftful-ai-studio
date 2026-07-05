@@ -76,13 +76,16 @@ function toProductCard(r: DbProduct) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type HomepageSection = {
   id: string;
   kind: string;
   title: string | null;
   subtitle: string | null;
-  config: Record<string, unknown>;
-  data: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
 };
 
 async function fetchProducts(
