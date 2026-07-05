@@ -308,34 +308,6 @@ function RecipientGrid({ section }: { section: HomepageSection }) {
   );
 }
 
-function RelationshipGrid({ section }: { section: HomepageSection }) {
-  const items = (section.data?.relationships ?? []) as { slug: string; name: string; image_url: string | null }[];
-  if (!items.length) return null;
-  return (
-    <section className="container-page py-8 md:py-10">
-      <SectionHeader title={section.title ?? "Shop by relationship"} subtitle={section.subtitle ?? undefined} ctaLabel="See all" ctaTo="/relationships" />
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 md:gap-4">
-        {items.map((r) => (
-          <Link
-            key={r.slug}
-            to="/rel/$relationship"
-            params={{ relationship: r.slug }}
-            className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-shadow hover:shadow-md"
-          >
-            <div className="aspect-square w-full max-w-20 overflow-hidden rounded-full bg-muted">
-              {r.image_url ? (
-                <img src={r.image_url} alt={r.name} className="h-full w-full object-cover" loading="lazy" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-2xl" aria-hidden>💝</div>
-              )}
-            </div>
-            <span className="text-xs font-semibold md:text-sm">{r.name}</span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  );
-}
 
 function GiftboxGrid({ section }: { section: HomepageSection }) {
   const boxes = (section.data?.boxes ?? []) as { slug: string; name: string; images: unknown; price_paise: number; offer_price_paise: number | null }[];
@@ -477,8 +449,6 @@ export function HomepageRenderer({ sections }: { sections: HomepageSection[] }) 
             return <OccasionGrid key={s.id} section={s} />;
           case "recipient_grid":
             return <RecipientGrid key={s.id} section={s} />;
-          case "relationship_grid":
-            return <RelationshipGrid key={s.id} section={s} />;
           case "giftbox_grid":
             return <GiftboxGrid key={s.id} section={s} />;
           case "image_cards":
