@@ -127,7 +127,7 @@ export const listProductsByRelationshipFn = createServerFn({ method: "GET" })
   .inputValidator((raw: unknown) =>
     z.object({ slug: z.string(), limit: z.number().int().min(1).max(120).default(60) }).parse(raw),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<TaxonomyProduct[]> => {
     const sb = publicClient();
     const { data: rel } = await sb.from("relationships").select("id").eq("slug", data.slug).eq("visible", true).maybeSingle();
     if (!rel) return [];
@@ -135,9 +135,10 @@ export const listProductsByRelationshipFn = createServerFn({ method: "GET" })
       .select("products(id,slug,sku,name,description,price_paise,offer_price_paise,stock,images,is_featured,is_trending,is_new_arrival,is_best_seller,status)")
       .eq("relationship_id", rel.id)
       .limit(data.limit);
-    return ((rows ?? []) as { products: Record<string, unknown> | null }[])
+    return ((rows ?? []) as { products: DbRel | null }[])
       .map((r) => r.products)
-      .filter((p): p is Record<string, unknown> => p !== null && (p as { status?: string }).status === "active");
+      .filter((p): p is DbRel => p !== null && p.status === "active")
+      .map(normalizeProduct);
   });
 
 // ===================================================================
