@@ -91,7 +91,7 @@ function ProductPage() {
   const toggleWishlist = useWishlist((s) => s.toggle);
   const navigate = useNavigate();
 
-  useEffect(() => { pushRecentlyViewed(product.slug); }, [product.slug]);
+  useEffect(() => { pushRecentlyViewed(product.slug); incrementProductViewFn({ data: { slug: product.slug } }).catch(() => {}); }, [product.slug]);
 
   const hasPersonalization = Object.values(personalization).some((v) => v && v.trim().length > 0);
 
