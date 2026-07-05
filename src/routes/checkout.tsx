@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import {
 
 import { useCart } from "@/lib/store";
 import { computeCartTotalsFn } from "@/lib/catalog.functions";
-import { computeCart, type CartTotals } from "@/lib/pricing";
+import { type CartTotals } from "@/lib/pricing";
 import { formatINR } from "@/lib/catalog";
 import { listAddressesFn, createAddressFn, type Address } from "@/lib/address.functions";
 import { placeCodOrderFn } from "@/lib/checkout.functions";
