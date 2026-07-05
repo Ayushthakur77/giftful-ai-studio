@@ -6,10 +6,15 @@ import { TrustStrip } from "@/components/marketing/trust-strip";
 import { OccasionTile } from "@/components/marketing/occasion-tile";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
+import { PriceBlock } from "@/components/product/price-block";
 import { Button } from "@/components/ui/button";
 import { AiHomeRails } from "@/components/ai/ai-home-rail";
 import { occasions, recipients, boxBuilderImage } from "@/lib/catalog";
-import { listPublicProductsFn } from "@/lib/public-catalog.functions";
+import {
+  listPublicProductsFn,
+  listPublicCategoriesFn,
+  listPublicReadyBoxesFn,
+} from "@/lib/public-catalog.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,11 +51,25 @@ function HomePage() {
   const trendingQ = useProducts("trending");
   const bestQ = useProducts("best_seller");
   const featuredQ = useProducts("featured");
+  const newArrivalsQ = useProducts("new_arrival");
+  const categoriesQ = useQuery({
+    queryKey: ["public-categories-home"],
+    queryFn: () => listPublicCategoriesFn(),
+    staleTime: 60_000,
+  });
+  const readyBoxesQ = useQuery({
+    queryKey: ["public-ready-boxes-home"],
+    queryFn: () => listPublicReadyBoxesFn(),
+    staleTime: 60_000,
+  });
 
   const products = all.data ?? [];
   const trending = trendingQ.data ?? [];
   const bestSellers = bestQ.data ?? [];
   const featured = featuredQ.data ?? [];
+  const newArrivals = newArrivalsQ.data ?? [];
+  const categories = (categoriesQ.data ?? []).filter((c: any) => c.show_on_home !== false);
+  const readyBoxes = readyBoxesQ.data ?? [];
 
 
   return (
