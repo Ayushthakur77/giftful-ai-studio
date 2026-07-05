@@ -40,7 +40,7 @@ function HomePage() {
   });
 
   const sections = layoutQ.data ?? [];
-  console.log("[client homepage]", { isLoading: layoutQ.isLoading, length: sections.length, sections: sections.map((s) => s.kind) });
+  console.log("[client homepage]", { isLoading: layoutQ.isLoading, length: sections.length, sections: sections.map((s) => ({ kind: s.kind, title: s.title, dataKeys: s.data ? Object.keys(s.data) : null })) });
 
   // If nothing is configured yet, render a graceful default so the site
   // is never empty. Admin can then customize via /admin/homepage-builder.
