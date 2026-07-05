@@ -121,7 +121,7 @@ export async function loadCatalogSnapshot(lines: CartLine[]): Promise<CatalogSna
     if (catIds.length) {
       const { data: cats } = await supabaseAdmin
         .from("categories").select("id,slug").in("id", catIds);
-      for (const c of cats ?? []) catSlugById.set(c.id, c.slug);
+      for (const c of (cats ?? []) as Array<{ id: string; slug: string }>) catSlugById.set(c.id, c.slug);
     }
 
     for (const r of data ?? []) {
