@@ -58,7 +58,7 @@ async function computeTotalsWithCoupon(
   }
 
   const discountedSubtotal = Math.max(0, base.subtotalPaise - couponDiscountPaise);
-  const taxPaise = Math.round(discountedSubtotal * 0.18);
+  const taxPaise = 0;
   const grandTotalPaise = discountedSubtotal + taxPaise + shippingPaise;
 
   return {
