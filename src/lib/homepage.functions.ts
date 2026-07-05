@@ -145,21 +145,34 @@ async function resolveSection(sb: ReturnType<typeof client>, s: {
     case "image_cards":
       data = { cards: Array.isArray(config.cards) ? config.cards : [] };
       break;
-    case "featured":
-      data = { products: await fetchProducts(sb, "featured", limit, productSlugs) };
+    case "featured": {
+      let products = await fetchProducts(sb, "featured", limit, productSlugs);
+      if (!products.length) products = await fetchProducts(sb, null, limit);
+      data = { products };
       break;
-    case "trending":
-      data = { products: await fetchProducts(sb, "trending", limit, productSlugs) };
+    }
+    case "trending": {
+      let products = await fetchProducts(sb, "trending", limit, productSlugs);
+      if (!products.length) products = await fetchProducts(sb, null, limit);
+      data = { products };
       break;
-    case "best_sellers":
-      data = { products: await fetchProducts(sb, "best_seller", limit, productSlugs) };
+    }
+    case "best_sellers": {
+      let products = await fetchProducts(sb, "best_seller", limit, productSlugs);
+      if (!products.length) products = await fetchProducts(sb, null, limit);
+      data = { products };
       break;
-    case "new_arrivals":
-      data = { products: await fetchProducts(sb, "new_arrival", limit, productSlugs) };
+    }
+    case "new_arrivals": {
+      let products = await fetchProducts(sb, "new_arrival", limit, productSlugs);
+      if (!products.length) products = await fetchProducts(sb, null, limit);
+      data = { products };
       break;
-    case "product_showcase":
+    }
+    case "product_showcase": {
       data = { products: await fetchProducts(sb, null, limit, productSlugs) };
       break;
+    }
     case "category_grid": {
       const { data: rows } = await sb.from("categories")
         .select("slug,name,description,icon_url,banner_url,sort_order")
