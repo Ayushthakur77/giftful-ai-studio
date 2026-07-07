@@ -231,6 +231,61 @@ function CategoryGrid({ section }: { section: HomepageSection }) {
   );
 }
 
+function RecipientGrid({ section }: { section: HomepageSection }) {
+  const items = (section.data?.recipients ?? []) as { slug: string; name: string; tagline: string | null; image_url: string | null }[];
+  if (!items.length) return null;
+  return (
+    <section className="container-page py-8 md:py-10">
+      <SectionHeader title={section.title ?? "Shop by recipient"} subtitle={section.subtitle ?? undefined} ctaLabel="See all" ctaTo="/recipients" />
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 md:gap-4">
+        {items.map((r) => (
+          <Link key={r.slug} to="/r/$recipient" params={{ recipient: r.slug }} className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-shadow hover:shadow-md">
+            {r.image_url ? <img src={r.image_url} alt="" className="h-14 w-14 rounded-full object-cover" loading="lazy" /> : <span className="text-3xl" aria-hidden>🎁</span>}
+            <span className="text-xs font-semibold md:text-sm">{r.name}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function RelationshipGrid({ section }: { section: HomepageSection }) {
+  const items = (section.data?.relationships ?? []) as { slug: string; name: string; image_url: string | null }[];
+  if (!items.length) return null;
+  return (
+    <section className="container-page py-8 md:py-10">
+      <SectionHeader title={section.title ?? "Shop by relationship"} subtitle={section.subtitle ?? undefined} ctaLabel="See all" ctaTo="/relationships" />
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 md:gap-4">
+        {items.map((r) => (
+          <Link key={r.slug} to="/rel/$relationship" params={{ relationship: r.slug }} className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-shadow hover:shadow-md">
+            {r.image_url ? <img src={r.image_url} alt="" className="h-14 w-14 rounded-full object-cover" loading="lazy" /> : <span className="text-3xl" aria-hidden>💝</span>}
+            <span className="text-xs font-semibold md:text-sm">{r.name}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function OccasionGrid({ section }: { section: HomepageSection }) {
+  const items = (section.data?.occasions ?? []) as { slug: string; name: string; emoji?: string; image_url?: string | null }[];
+  if (!items.length) return null;
+  return (
+    <section className="container-page py-8 md:py-10">
+      <SectionHeader title={section.title ?? "Shop by occasion"} subtitle={section.subtitle ?? undefined} />
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 md:gap-4">
+        {items.map((o) => (
+          <Link key={o.slug} to="/o/$occasion" params={{ occasion: o.slug }} className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition-shadow hover:shadow-md">
+            {o.image_url ? <img src={o.image_url} alt="" className="h-14 w-14 rounded-full object-cover" loading="lazy" /> : <span className="text-3xl" aria-hidden>{o.emoji ?? "🎉"}</span>}
+            <span className="text-xs font-semibold md:text-sm">{o.name}</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
 
 
 
