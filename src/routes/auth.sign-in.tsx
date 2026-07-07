@@ -5,7 +5,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,17 +51,17 @@ function SignInPage() {
     setError(null);
     setGoogleLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+      const redirectTarget = `${window.location.origin}${safeTarget(search.redirect)}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: redirectTarget },
       });
-      if (result.error) {
-        setError(result.error instanceof Error ? result.error.message : "Google sign-in failed");
+      if (error) {
+        setError(error.message);
         setGoogleLoading(false);
         return;
       }
-      if (result.redirected) return; // browser will navigate
-      await router.invalidate();
-      navigate({ href: safeTarget(search.redirect) });
+      // Browser will redirect to Google — nothing else to do.
     } catch (e) {
       setError(e instanceof Error ? e.message : "Google sign-in failed");
       setGoogleLoading(false);
