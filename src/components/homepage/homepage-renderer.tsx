@@ -369,7 +369,15 @@ export function HomepageRenderer({ sections }: { sections: HomepageSection[] }) 
           case "countdown_offer":
             return <CountdownOffer key={s.id} section={s} />;
           case "category_grid":
+            return <CategoryGrid key={s.id} section={s} />;
+          case "giftbox_grid":
             return <GiftboxGrid key={s.id} section={s} />;
+          case "recipient_grid":
+            return <RecipientGrid key={s.id} section={s} />;
+          case "relationship_grid":
+            return <RelationshipGrid key={s.id} section={s} />;
+          case "occasion_grid":
+            return <OccasionGrid key={s.id} section={s} />;
           case "image_cards":
             return <ImageCards key={s.id} section={s} />;
           case "featured":
