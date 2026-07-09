@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -6,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PriceBlock } from "@/components/product/price-block";
 import { RatingPill } from "@/components/product/rating-pill";
 import { useWishlist, useCart } from "@/lib/store";
-import { findProductBySlug } from "@/lib/catalog";
+import { getPublicProductsBySlugsFn } from "@/lib/public-catalog.functions";
 
 export const Route = createFileRoute("/account/wishlist")({
   head: () => ({ meta: [{ title: "Your wishlist — Giftty" }, { name: "robots", content: "noindex" }] }),
@@ -17,9 +18,14 @@ function WishlistPage() {
   const slugs = useWishlist((s) => s.slugs);
   const remove = useWishlist((s) => s.remove);
   const addProduct = useCart((s) => s.addProduct);
-  const items = slugs.map((s) => findProductBySlug(s)).filter((p): p is NonNullable<typeof p> => !!p);
 
-  if (items.length === 0) {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["wishlist-products", slugs],
+    queryFn: () => getPublicProductsBySlugsFn({ data: { slugs } }),
+    enabled: slugs.length > 0,
+  });
+
+  if (slugs.length === 0 || (!isLoading && items.length === 0)) {
     return (
       <EmptyState
         icon={Heart}
@@ -29,6 +35,11 @@ function WishlistPage() {
       />
     );
   }
+
+  if (isLoading) {
+    return <div className="p-6 text-center text-sm text-muted-foreground">Loading your wishlist…</div>;
+  }
+
 
   return (
     <div className="grid gap-3">
