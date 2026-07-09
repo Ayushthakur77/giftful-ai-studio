@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { handleGoogleAuthError } from "@/lib/google-auth-error";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,13 +60,13 @@ function SignUpPage() {
         options: { redirectTo: `${window.location.origin}/account` },
       });
       if (error) {
-        setError(error.message);
+        setError(handleGoogleAuthError(error, { flow: "sign-up" }));
         setGoogleLoading(false);
         return;
       }
       // Browser will redirect to Google — nothing else to do.
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Google sign-up failed");
+      setError(handleGoogleAuthError(e, { flow: "sign-up" }));
       setGoogleLoading(false);
     }
   }

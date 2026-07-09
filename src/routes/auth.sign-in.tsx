@@ -5,6 +5,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
+import { handleGoogleAuthError } from "@/lib/google-auth-error";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,13 +58,13 @@ function SignInPage() {
         options: { redirectTo: redirectTarget },
       });
       if (error) {
-        setError(error.message);
+        setError(handleGoogleAuthError(error, { flow: "sign-in" }));
         setGoogleLoading(false);
         return;
       }
       // Browser will redirect to Google — nothing else to do.
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Google sign-in failed");
+      setError(handleGoogleAuthError(e, { flow: "sign-in" }));
       setGoogleLoading(false);
     }
   }
