@@ -5,6 +5,7 @@ import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
 import { supabase } from "@/integrations/supabase/client";
+import { handleGoogleAuthError } from "@/lib/google-auth-error";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
