@@ -118,6 +118,24 @@ export const getPublicProductBySlugFn = createServerFn({ method: "GET" })
     return { product, related };
   });
 
+export const getPublicProductsBySlugsFn = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) =>
+    z.object({ slugs: z.array(z.string()).max(60) }).parse(raw),
+  )
+  .handler(async ({ data }) => {
+    if (data.slugs.length === 0) return [] as Product[];
+    const sb = client();
+    const { data: rows } = await sb.from("products").select(SELECT)
+      .in("slug", data.slugs).eq("status", "active");
+    const bySlug = new Map<string, Product>();
+    for (const r of rows ?? []) {
+      const p = toProduct(r as unknown as DbProduct);
+      bySlug.set(p.slug, p);
+    }
+    // Preserve original slug order and drop missing/inactive.
+    return data.slugs.map((s) => bySlug.get(s)).filter((p): p is Product => !!p);
+  });
+
 export const listPublicCategoriesFn = createServerFn({ method: "GET" })
   .handler(async () => {
     const sb = client();
