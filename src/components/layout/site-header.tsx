@@ -52,6 +52,19 @@ export function SiteHeader() {
     staleTime: 60_000,
   });
 
+  // Combined nav: DB-driven category links first (or fallback list), then fixed items.
+  const categoryNav: { to: string; label: string }[] =
+    dbCategories.length > 0
+      ? dbCategories.map((c: { slug: string; name: string }) => ({
+          to: `/c/${c.slug}`,
+          label: c.name,
+        }))
+      : fallbackCategoryNav.map((n) => ({ to: n.to, label: n.label }));
+  const primaryNav: { to: string; label: string }[] = [
+    ...categoryNav,
+    ...fixedNav.map((n) => ({ to: n.to, label: n.label })),
+  ];
+
   async function handleSignOut() {
     await qc.cancelQueries();
     qc.clear();
