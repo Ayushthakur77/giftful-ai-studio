@@ -207,7 +207,17 @@ function CountdownOffer({ section }: { section: HomepageSection }) {
 
 /* ---------- grids ---------- */
 function CategoryGrid({ section }: { section: HomepageSection }) {
-  const cats = (section.data?.categories ?? []) as { slug: string; name: string; icon_url: string | null }[];
+  const configured = (section.data?.categories ?? []) as { slug: string; name: string; icon_url: string | null }[];
+  // Fall back to DB categories when the admin section has none configured.
+  const { data: dbCats = [] } = useQuery({
+    queryKey: ["public-categories"],
+    queryFn: () => listPublicCategoriesFn(),
+    staleTime: 60_000,
+    enabled: configured.length === 0,
+  });
+  const cats = configured.length > 0
+    ? configured
+    : (dbCats as { slug: string; name: string; icon_url: string | null }[]);
   if (!cats.length) return null;
   return (
     <section className="container-page py-8 md:py-10">
