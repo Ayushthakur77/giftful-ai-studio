@@ -4,9 +4,9 @@ import { Package, Heart, MapPin, Bell, Sparkles } from "lucide-react";
 
 import { getProfileFn } from "@/lib/profile.functions";
 import { listNotificationsFn } from "@/lib/notifications.functions";
+import { getPublicProductsBySlugsFn } from "@/lib/public-catalog.functions";
 import { Button } from "@/components/ui/button";
 import { getRecentlyViewed } from "@/lib/store";
-import { findProductBySlug } from "@/lib/catalog";
 import { ProductCard } from "@/components/product/product-card";
 import { useEffect, useState } from "react";
 
@@ -19,7 +19,11 @@ function DashboardPage() {
   const { data: notif } = useQuery({ queryKey: ["notifications"], queryFn: () => listNotificationsFn() });
   const [rvSlugs, setRvSlugs] = useState<string[]>([]);
   useEffect(() => setRvSlugs(getRecentlyViewed()), []);
-  const rvProducts = rvSlugs.map((s) => findProductBySlug(s)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, 4);
+  const { data: rvProducts = [] } = useQuery({
+    queryKey: ["recently-viewed", rvSlugs.slice(0, 4)],
+    queryFn: () => getPublicProductsBySlugsFn({ data: { slugs: rvSlugs.slice(0, 4) } }),
+    enabled: rvSlugs.length > 0,
+  });
 
   const stats = profile?.stats ?? { addressCount: 0, wishlistCount: 0, unreadNotifications: 0 };
   const p = profile?.profile;
