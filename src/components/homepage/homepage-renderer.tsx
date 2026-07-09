@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceBlock } from "@/components/product/price-block";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { AiHomeRails } from "@/components/ai/ai-home-rail";
+import { listPublicCategoriesFn } from "@/lib/public-catalog.functions";
 import type { HomepageSection } from "@/lib/homepage.functions";
 
 /* ---------- utilities ---------- */
