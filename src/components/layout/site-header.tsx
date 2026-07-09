@@ -14,16 +14,20 @@ import { SearchAutocomplete } from "@/components/search/search-autocomplete";
 
 
 
-const primaryNav = [
+// Fixed (non-category) items — always visible, in order after DB categories.
+const fixedNav = [
+  { to: "/gift-boxes", label: "Gift Boxes", icon: Gift },
+  { to: "/gift-box", label: "Build a Box", icon: Gift },
+  { to: "/ai-finder", label: "AI Finder", icon: Sparkles },
+] as const;
+
+// Fallback list used only if no categories are configured in the DB yet.
+const fallbackCategoryNav = [
   { to: "/c/personalized", label: "Personalized", icon: Sparkles },
   { to: "/c/flowers", label: "Flowers" },
   { to: "/c/cakes", label: "Cakes" },
   { to: "/c/chocolates", label: "Chocolates" },
   { to: "/c/hampers", label: "Hampers" },
-  { to: "/gift-boxes", label: "Gift Boxes", icon: Gift },
-  { to: "/gift-box", label: "Build a Box", icon: Gift },
-  { to: "/c/corporate", label: "Corporate" },
-  { to: "/ai-finder", label: "AI Finder", icon: Sparkles },
 ] as const;
 
 
@@ -47,6 +51,19 @@ export function SiteHeader() {
     queryFn: () => listPublicCategoriesFn(),
     staleTime: 60_000,
   });
+
+  // Combined nav: DB-driven category links first (or fallback list), then fixed items.
+  const categoryNav: { to: string; label: string }[] =
+    dbCategories.length > 0
+      ? dbCategories.map((c: { slug: string; name: string }) => ({
+          to: `/c/${c.slug}`,
+          label: c.name,
+        }))
+      : fallbackCategoryNav.map((n) => ({ to: n.to, label: n.label }));
+  const primaryNav: { to: string; label: string }[] = [
+    ...categoryNav,
+    ...fixedNav.map((n) => ({ to: n.to, label: n.label })),
+  ];
 
   async function handleSignOut() {
     await qc.cancelQueries();

@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Sparkles, Truck, RefreshCcw, ShieldCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { PriceBlock } from "@/components/product/price-block";
 import { SectionHeader, ProductRail } from "@/components/product/product-rail";
 import { AiHomeRails } from "@/components/ai/ai-home-rail";
+import { listPublicCategoriesFn } from "@/lib/public-catalog.functions";
 import type { HomepageSection } from "@/lib/homepage.functions";
 
 /* ---------- utilities ---------- */
@@ -205,7 +207,17 @@ function CountdownOffer({ section }: { section: HomepageSection }) {
 
 /* ---------- grids ---------- */
 function CategoryGrid({ section }: { section: HomepageSection }) {
-  const cats = (section.data?.categories ?? []) as { slug: string; name: string; icon_url: string | null }[];
+  const configured = (section.data?.categories ?? []) as { slug: string; name: string; icon_url: string | null }[];
+  // Fall back to DB categories when the admin section has none configured.
+  const { data: dbCats = [] } = useQuery({
+    queryKey: ["public-categories"],
+    queryFn: () => listPublicCategoriesFn(),
+    staleTime: 60_000,
+    enabled: configured.length === 0,
+  });
+  const cats = configured.length > 0
+    ? configured
+    : (dbCats as { slug: string; name: string; icon_url: string | null }[]);
   if (!cats.length) return null;
   return (
     <section className="container-page py-8 md:py-10">
